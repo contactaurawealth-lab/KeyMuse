@@ -103,6 +103,26 @@ export const SettingsModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         <div className="control-group" style={{ marginTop: '16px' }}>
+          <label className="control-label">Cloud & Local Presets Sync</label>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+            Sync custom instrument presets with the Python FastAPI backend or run 100% offline via IndexedDB.
+          </div>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button
+              onClick={async () => {
+                setImportStatus('Syncing presets with backend...');
+                const res = await StorageService.syncWithBackendApi();
+                setImportStatus(res.message);
+                setTimeout(() => setImportStatus(''), 4000);
+              }}
+              className="studio-btn"
+            >
+              <RefreshCw size={14} /> Sync Presets (API)
+            </button>
+          </div>
+        </div>
+
+        <div className="control-group" style={{ marginTop: '16px' }}>
           <label className="control-label">Project Backup & Restore</label>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button onClick={handleExportProject} className="studio-btn studio-btn-primary">

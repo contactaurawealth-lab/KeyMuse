@@ -173,5 +173,96 @@ export const StorageService = {
     } catch (e: any) {
       throw new Error(`Project import validation failed: ${e.message}`);
     }
+  },
+
+  // Save preset to IndexedDB
+  async savePreset(preset: { id: string; name: string; category?: string; config: any }): Promise<void> {
+    try {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_PRESETS, 'readwrite');
+        const store = tx.objectStore(STORE_PRESETS);
+        const req = store.put({ ...preset, updatedAt: Date.now() });
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    } catch (err) {
+      console.warn('StorageService.savePreset fallback/error:', err);
+    }
+  },
+
+  // List all local presets
+  async listPresets(): Promise<any[]> {
+    try {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_PRESETS, 'readonly');
+        const store = tx.objectStore(STORE_PRESETS);
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    } catch (err) {
+      console.warn('StorageService.listPresets fallback/error:', err);
+      return [];
+    }
+  },
+
+  // Delete preset
+  async deletePreset(id: string): Promise<void> {
+    try {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_PRESETS, 'readwrite');
+        const store = tx.objectStore(STORE_PRESETS);
+        const req = store.delete(id);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    } catch (err) {
+      console.warn('StorageService.deletePreset fallback/error:', err);
+    }
+  },
+
+  // Sync with Python FastAPI backend (with graceful offline fallback)
+  async syncWithBackendApi(apiBaseUrl: string = 'http://localhost:8000/api'): Promise<{ success: boolean; count: number; offline: boolean; message: string }> {
+    try {
+      const res = await fetch(`${apiBaseUrl}/presets`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      const serverPresets = await res.json();
+      if (Array.isArray(serverPresets)) {
+        for (const p of serverPresets) {
+          await this.savePreset({
+            id: p.id || `srv_${Date.now()}`,
+            name: p.name,
+            category: p.category || 'all',
+            config: p.config || p
+          });
+        }
+        return {
+          success: true,
+          count: serverPresets.length,
+          offline: false,
+          message: `Synced ${serverPresets.length} presets from server.`
+        };
+      }
+      return { success: true, count: 0, offline: false, message: 'Server returned no presets.' };
+    } catch (err: any) {
+      // Offline mode: perfectly normal for client-only operation
+      const localPresets = await this.listPresets();
+      return {
+        success: true,
+        count: localPresets.length,
+        offline: true,
+        message: `Offline mode: using ${localPresets.length} local preset(s).`
+      };
+    }
   }
 };
