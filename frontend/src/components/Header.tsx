@@ -12,19 +12,25 @@ import {
   Sliders,
   AlertOctagon,
   RotateCcw,
-  RotateCw
+  RotateCw,
+  Bot,
+  Sparkles
 } from 'lucide-react';
 
 interface HeaderProps {
   onOpenSettings: () => void;
   onOpenMappings: () => void;
   onOpenMidi: () => void;
+  currentView?: 'studio' | 'agent-hub';
+  onSelectView?: (view: 'studio' | 'agent-hub') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onOpenSettings,
   onOpenMappings,
-  onOpenMidi
+  onOpenMidi,
+  currentView = 'studio',
+  onSelectView
 }) => {
   const {
     audioStatus,
@@ -53,12 +59,55 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="studio-header">
       <div className="studio-brand">
-        <span className="brand-title">KeyMuse</span>
+        <span
+          className="brand-title"
+          onClick={() => onSelectView?.('studio')}
+          style={{ cursor: 'pointer' }}
+          title="Return to Studio Workspace"
+        >
+          KeyMuse
+        </span>
         <span className="brand-tagline" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
           Your Keyboard. Your Orchestra.
         </span>
-        <span className="brand-badge">Studio v1.0</span>
+        <span className="brand-badge">Studio v2.0</span>
       </div>
+
+      {/* Primary Top-Level Navigation View Selector */}
+      <nav style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <button
+          onClick={() => onSelectView?.('studio')}
+          className={`studio-btn ${currentView === 'studio' ? 'studio-btn-primary' : ''}`}
+          style={{ fontSize: '12px', padding: '6px 12px' }}
+        >
+          <Music size={14} /> Music Studio
+        </button>
+        <button
+          onClick={() => onSelectView?.('agent-hub')}
+          className="studio-btn"
+          style={{
+            fontSize: '12px',
+            padding: '6px 14px',
+            backgroundColor: currentView === 'agent-hub' ? 'var(--accent-purple)' : 'rgba(168, 85, 247, 0.15)',
+            border: currentView === 'agent-hub' ? '1px solid var(--accent-purple)' : '1px solid rgba(168, 85, 247, 0.4)',
+            color: currentView === 'agent-hub' ? '#fff' : 'var(--accent-purple)',
+            fontWeight: 700
+          }}
+        >
+          <Bot size={14} /> Connect Your Agent
+          <span
+            style={{
+              fontSize: '10px',
+              padding: '1px 5px',
+              borderRadius: '8px',
+              backgroundColor: currentView === 'agent-hub' ? 'rgba(255, 255, 255, 0.25)' : 'rgba(168, 85, 247, 0.3)',
+              marginLeft: '4px'
+            }}
+          >
+            MCP
+          </span>
+        </button>
+      </nav>
 
       <div className="header-controls">
         {/* Audio Engine Resume Button */}

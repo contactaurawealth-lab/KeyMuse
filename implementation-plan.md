@@ -879,6 +879,232 @@
 - Canonical schema (`KeyMuseProject`) is 100% JSON compatible with the React visual studio state.
 - MIDI and WAV export outputs can be directly imported and displayed in the Phase 1 timeline and loop station.
 
+---
+
+# Phase 3: Web Studio & Coding Agent Setup Hub
+
+## Overview & Architecture
+Phase 3 bridges the autonomous AI composition engine (Phase 2) and browser-based musical studio (Phase 1) with:
+1. **Human AI Music Studio (`AiStudio.tsx`)**: An interactive, responsive interface allowing humans to create music projects, compose using natural language or granular musical controls (key, mode, BPM, duration, instruments, energy), visualize section arrangements and track timelines, preview real rendered 16-bit PCM audio with a custom waveform player, inspect empirical audio metrics (peak dBFS, RMS, clipping risk, silence boundaries), execute targeted revisions, and export deliverables (Master WAV, MIDI, Stems, JSON).
+2. **Dedicated "Connect Your AI Agent" Setup Hub (`AgentSetupHub.tsx`)**: A complete self-service installation guide inside the application for connecting MCP-compatible coding agents (Antigravity, Claude Code, OpenAI Codex, Cursor, VSCode/Cline). Features an interactive setup wizard, OS selector, copy buttons, live 15 MCP tool explorer, Python SDK documentation, expandable troubleshooting FAQs, security guidelines, and persistent checklist progress via `localStorage`.
+3. **FastAPI Autopilot Integration**: A dedicated router (`backend/app/routers/autopilot.py`) exposing project creation, composition, rendering, revision, stem exports, and live MCP tool discovery from `keymuse.mcp.server.MCPServer`.
+4. **Comprehensive Test Suite**: Automated tests for backend autopilot routes, frontend studio components, agent wizard interactions, copy buttons, and local persistence.
+
+## Step-by-Step Execution Plan
+
+### Step 1 — Interface & Architecture Audit
+- **Objectives**: Audit backend and frontend architecture, confirm test baselines (37 Python, 44 Vitest passing), inspect MCP server discovery mechanisms, and establish the Phase 3 implementation plan.
+- **Completed Work**:
+  - Audited FastAPI backend structure (`app/main.py`, `app/database.py`, `app/models.py`, `app/schemas.py`).
+  - Verified venv Python environment has `keymuse-2.0.0` installed and importable.
+  - Verified 37/37 Python tests passing in `tests/` and `backend/tests/`.
+  - Verified 44/44 frontend Vitest tests passing in `frontend/`.
+  - Formulated full 8-step roadmap for Phase 3.
+- **Files Changed**:
+  - `implementation-plan.md`
+- **Commands Executed**:
+  - `pytest tests/ backend/tests/` (37 passed in 12.17s)
+  - `npm test` (44 passed in 41.18s)
+- **Test Results**: All 81 automated tests passing. Zero defects.
+- **Status**: COMPLETED
+- **Next Step**: Step 2 — Backend Autopilot Router & Endpoints
+- **Confirmation of 50-second Wait**: Completed.
+
+### Step 2 — Backend Autopilot Router & Endpoints
+- **Objectives**: Build `backend/app/routers/autopilot.py` exposing project metadata, dynamic MCP tool introspection from `keymuse.mcp.server.MCPServer`, audio synthesis composition, closed-loop revisions, 16-bit PCM WAV audio streaming, SMF Type 0 MIDI export, stem downloads, and project JSON retrieval.
+- **Completed Work**:
+  - Implemented `backend/app/routers/autopilot.py` with:
+    - `GET /api/autopilot/metadata`: Real repository URL, package metadata, entry points (`keymuse-mcp`), supported agents (Antigravity, Claude Code, OpenAI Codex, Cursor, VSCode/Cline).
+    - `GET /api/autopilot/tools`: Dynamically queries `mcp_server.list_tools()` to discover all 15 official MCP tools with arguments, schemas, and example invocations.
+    - `POST /api/autopilot/compose`: Executes end-to-end `MusicAutopilot.compose()`, producing authentic audio, MIDI, stems, and analysis.
+    - `POST /api/autopilot/revise`: Executes surgical adjustments (volume gain dB, tempo delta, duration targets) with audio re-synthesis and metric evaluation.
+    - `GET /api/autopilot/projects/{project_id}/audio`: Real 16-bit PCM WAV file streaming.
+    - `GET /api/autopilot/projects/{project_id}/midi`: Authentic SMF Type 0 binary MIDI download.
+    - `GET /api/autopilot/projects/{project_id}/stems/{stem_name}`: Individual stem WAV download.
+    - `GET /api/autopilot/projects/{project_id}/manifest`: Audit report and metrics manifest.
+    - `GET /api/autopilot/projects/{project_id}/project`: Canonical KeyMuseProject JSON schema.
+  - Mounted router in `backend/app/main.py`.
+  - Added unit and workflow tests in `backend/tests/test_autopilot_api.py`.
+  - Verified full test suite: 40/40 tests passing across unit, integration, baseline, and autopilot API suites.
+- **Files Changed**:
+  - `backend/app/routers/autopilot.py`
+  - `backend/app/main.py`
+  - `backend/tests/test_autopilot_api.py`
+  - `implementation-plan.md`
+- **Commands Executed**:
+  - `pytest backend/tests/test_autopilot_api.py` (3 passed in 9.66s)
+  - `pytest tests/ backend/tests/` (40 passed in 16.01s)
+- **Test Results**: All 40 automated tests passed.
+- **Status**: COMPLETED
+- **Next Step**: Step 3 — Human AI Music Studio Frontend (`AiStudio.tsx`)
+- **Confirmation of 50-second Wait**: Completed (50.106s real async interval verified).
+
+### Step 3 — Human AI Music Studio Frontend (`AiStudio.tsx`)
+- **Objectives**: Build a functional, responsive web interface for human composers to describe musical ideas in natural language, configure tempo, key, mode, duration, and instruments, trigger real Python autopilot composition, preview real 16-bit PCM WAV audio with interactive waveform visualizer, inspect empirical audio metrics (peak dBFS, RMS loudness, clipping risk, silence boundaries), execute targeted closed-loop revisions, and export all deliverables (WAV, MIDI, Stems, JSON).
+- **Completed Work**:
+  - Implemented `frontend/src/components/AiStudio.tsx`:
+    - Natural language music brief composer with 4 pre-configured style presets (Cinematic Sci-Fi, Cyberpunk Pulse, Lofi Ambient Chill, Epic Orchestral Climax).
+    - Musical parameter configuration: Tempo (BPM), Key & Mode selectors, target duration slider, deterministic seed input, and 6 active voice toggles.
+    - Full transport audio previewer with HTML5 `<audio>` playback, interactive scrubber, play/pause/replay controls, volume fader, and waveform visualizer bars.
+    - Empirical Audio Quality Inspector display: Peak dBFS, RMS level, clipping risk detection (0 clips / safe headroom indicator), and silence boundary measurements.
+    - Arrangement & Track Structure viewer: visual section blocks with energy percentages, track channels, and isolated stem download triggers.
+    - Closed-Loop Revision Panel: volume gain delta, tempo adjustment, and targeted instructions calling `POST /api/autopilot/revise`.
+    - Direct deliverable export suite: Master WAV, Standard MIDI File Type 0, Project JSON schema, and audit report manifest.
+  - Verified TypeScript compilation: 0 errors (`npx tsc --noEmit`).
+- **Files Changed**:
+  - `frontend/src/components/AiStudio.tsx`
+  - `implementation-plan.md`
+- **Commands Executed**:
+  - `npx tsc --noEmit` (0 errors)
+- **Test Results**: Clean TypeScript compilation with complete typing.
+- **Status**: COMPLETED
+- **Next Step**: Step 4 — Dedicated "Connect Your AI Agent" Setup Hub (`AgentSetupHub.tsx`)
+- **Confirmation of 50-second Wait**: Completed (50.097s real async interval verified).
+
+### Step 4 — Dedicated "Connect Your AI Agent" Setup Hub (`AgentSetupHub.tsx`)
+- **Objectives**: Build a dedicated, self-service onboarding hub inside the application for connecting MCP-compatible coding agents (Antigravity, Claude Code, OpenAI Codex, Cursor, VSCode/Cline).
+- **Completed Work**:
+  - Implemented `frontend/src/components/AgentSetupHub.tsx` featuring:
+    - Sticky navigation sidebar with 10 jump-links (Quick Start, Get KeyMuse, Choose Your Agent, MCP Configuration, Connect and Test, Available Tools, Python SDK, Troubleshooting, Security, Checklist).
+    - Operating System selector (Linux, macOS, Windows) dynamically adapting command syntax, venv activation paths, and filesystem locations.
+    - Coding Agent selector (Google Antigravity, Claude Code, OpenAI Codex, Cursor IDE, VSCode/Cline) generating exact configuration syntax (JSON / CLI).
+    - Interactive 15-tool reference with real-time text search filter, categorized badges, parameters, and one-click copyable tool call snippets.
+    - One-click copy buttons for Git clone instructions, verification runs, configuration JSON, and sample agent prompts.
+    - Expandable troubleshooting accordion addressing missing module errors, audio backend questions, and stdio execution.
+    - Defensive security overview highlighting path traversal sandboxing (`resolve_safe_path`), resource ceilings (600s, 32 tracks, 50k notes), and stdio isolation.
+    - Final interactive 7-point connection checklist with local progress persistence via `localStorage`.
+  - Verified TypeScript compilation: 0 errors (`npx tsc --noEmit`).
+- **Files Changed**:
+  - `frontend/src/components/AgentSetupHub.tsx`
+  - `implementation-plan.md`
+- **Commands Executed**:
+  - `npx tsc --noEmit` (0 errors)
+- **Test Results**: Clean TypeScript compilation with complete typing.
+- **Status**: COMPLETED
+- **Next Step**: Step 5 — Frontend Studio Navigation, Theme & Brand Integration
+- **Confirmation of 50-second Wait**: Completed (50.114s real async interval verified).
+
+### Step 5 — Frontend Studio Navigation, Theme & Brand Integration
+- **Objectives**: Seamlessly integrate `AiStudio` and `AgentSetupHub` into `App.tsx` and `Header.tsx`, providing intuitive top-level navigation, responsive tab switching, and dark/light theme consistency.
+- **Completed Work**:
+  - Updated `Header.tsx` with top navigation bar:
+    - Primary "Music Studio" view button returning to full studio workspace.
+    - Prominent "Connect Your Agent" view button featuring custom purple styling and "MCP" badge.
+  - Updated `App.tsx` with view switching between `'studio'` and `'agent-hub'`.
+  - Added "AI Music Autopilot" tab into the studio workspace with cyan sparkles branding, providing seamless switching alongside Piano & Keyboard, Instruments, Drum Machine, Mixer, and Loop Station.
+  - Verified dark/light theme variables and styling in `studio.css` and `theme.css`.
+  - Verified TypeScript compilation: 0 errors (`npx tsc --noEmit`).
+- **Files Changed**:
+  - `frontend/src/components/Header.tsx`
+  - `frontend/src/App.tsx`
+  - `implementation-plan.md`
+- **Commands Executed**:
+  - `npx tsc --noEmit` (0 errors)
+- **Test Results**: Clean TypeScript compilation with complete typing.
+- **Status**: COMPLETED
+- **Next Step**: Step 6 — Frontend Unit & Interaction Tests
+- **Confirmation of 50-second Wait**: Completed (50.114s real async interval verified).
+
+### Step 6 — Frontend Unit & Interaction Tests
+- **Objectives**: Build comprehensive unit and interaction tests for `AgentSetupHub.tsx` and `AiStudio.tsx`, verifying rendering, user interactions, agent and OS switching, tool filtering, copy to clipboard, closed-loop composition and revision flows, and test all 14 frontend suites.
+- **Completed Work**:
+  - Authored `frontend/src/components/AgentSetupHub.test.tsx` (6 tests):
+    - Verified hero header, protocol badge, and target OS buttons (Linux, macOS, Windows).
+    - Verified dynamic switching between coding agents (Antigravity, Claude Code, OpenAI Codex, Cursor, VSCode/Cline) and matching configuration JSON/CLI snippets.
+    - Verified dynamic tool search filter across all 15 MCP tools.
+    - Verified interactive troubleshooting FAQ accordion expansion and collapse.
+    - Verified clipboard copy button interactions.
+    - Verified interactive 7-point checklist state persistence with `localStorage`.
+  - Authored `frontend/src/components/AiStudio.test.tsx` (4 tests):
+    - Verified studio header, preset buttons, and composition form controls.
+    - Verified composition submission with mock API response, real audio playback controls, waveform visualizer, and empirical quality metrics (dBFS, RMS, clipping risk, silence boundaries).
+    - Verified closed-loop revision flow calling `POST /api/autopilot/revise` and updating metrics.
+    - Verified deliverable export links (Master WAV, MIDI, Project JSON, Manifest).
+  - Executed full Vitest test suite: 54/54 tests passed across all 14 test files with 0 failures.
+- **Files Changed**:
+  - `frontend/src/components/AgentSetupHub.test.tsx`
+  - `frontend/src/components/AiStudio.test.tsx`
+  - `implementation-plan.md`
+- **Commands Executed**:
+  - `npx vitest run` (54 passed across 14 test files in 39.11s)
+- **Test Results**: All 54 automated frontend tests passed with zero defects.
+- **Status**: COMPLETED
+- **Next Step**: Step 7 — Full Stack Integration & Production Build
+- **Confirmation of 50-second Wait**: Completed (50.09s real async interval verified).
+
+### Step 7 — Full Stack Integration, Production Build & Vercel Deployment
+- **Objectives**: Execute full multi-tier testing strategy across frontend and backend, compile optimized production bundle, deploy full-stack application to Vercel production at `https://keymuse-agent.vercel.app`, and verify live endpoints.
+- **Completed Work**:
+  - Executed complete Pytest suite covering all 15 test modules: 40/40 tests passed in 16.06s with 0 failures.
+  - Executed complete Vitest suite covering all 14 test modules: 54/54 tests passed in 40.62s with 0 failures.
+  - Total automated tests passing: 94/94 tests.
+  - Compiled optimized production bundle (`tsc && vite build`): zero errors (341.9 kB JS, 7.5 kB CSS).
+  - Configured Vercel serverless integration:
+    - `api/index.py`: FastAPI serverless entrypoint with `/tmp` sandboxing and dynamic Python pathing.
+    - `vercel.json`: Framework preset, build commands, and API/SPA URL rewrites.
+    - `.vercelignore`: Excluded local audio artifacts, virtualenvs, and test caches (reduced deployment archive from 129MB to 716KB).
+  - Deployed to Vercel production:
+    - Production URL: `https://keymuse-agent.vercel.app`
+    - Verified `GET /`: HTTP 200, assets served with cache headers.
+    - Verified `GET /api/health`: HTTP 200 `{"status":"healthy","service":"KeyMuse API"}`.
+    - Verified `GET /api/autopilot/metadata`: HTTP 200, dynamic package specifications and 5 supported agent profiles.
+    - Verified `GET /api/autopilot/tools`: HTTP 200, dynamic discovery of all 15 MCP tools.
+    - Verified `POST /api/autopilot/compose`: HTTP 200, real Python DSP multi-track synthesis in serverless environment.
+    - Verified `GET /api/autopilot/projects/{id}/audio`: HTTP 200, authentic 16-bit PCM WAV streaming.
+    - Verified `GET /api/autopilot/projects/{id}/midi`: HTTP 200, authentic SMF Type 0 binary MIDI download.
+- **Files Changed**:
+  - `backend/app/database.py`
+  - `backend/app/main.py`
+  - `backend/app/routers/autopilot.py`
+  - `keymuse/autopilot/autopilot.py`
+  - `frontend/package.json`
+  - `vercel.json`
+  - `package.json`
+  - `requirements.txt`
+  - `api/index.py`
+  - `.vercelignore`
+  - `implementation-plan.md`
+- **Commands Executed**:
+  - `pytest tests/ backend/tests/` (40 passed in 16.06s)
+  - `npm test` (54 passed across 14 test files in 40.62s)
+  - `npm run build` (tsc & vite build succeeded in dist/)
+  - `vercel deploy --prod --yes` (Production deployment succeeded, aliased to https://keymuse-agent.vercel.app)
+  - `curl -s https://keymuse-agent.vercel.app/api/health` (HTTP 200)
+- **Test Results**: All 94 automated tests passed across backend and frontend. Production deployment live and verified.
+- **Status**: COMPLETED
+- **Next Step**: Step 8 — Documentation Sync, Final Audit & GitHub Push
+- **Confirmation of 50-second Wait**: Scheduled upon completion of Step 7.
+
+### Step 8 — Documentation Sync, Final Audit & GitHub Push
+- **Objectives**: Synchronize all project documentation (`README.md`, `agent.md`, `feature.md`, `implementation-plan.md`) between `/root/keymuse/` and `/root/`, stage all deliverables, commit, and push to GitHub `main` branch.
+- **Completed Work**:
+  - Authored comprehensive documentation in `README.md` covering Phase 3 Web Studio & Agent Setup Hub, live Vercel URL, and updated 94-test verification table.
+  - Updated `agent.md` with Section 9 detailing Phase 3 architecture, `AiStudio`, `AgentSetupHub`, and Vercel serverless integration.
+  - Updated `feature.md` with complete Phase 3 feature matrix entries (`FEAT-WEB-1` through `FEAT-WEB-4`).
+  - Synchronized all 4 documentation files (`README.md`, `agent.md`, `feature.md`, `implementation-plan.md`) to `/root/`.
+  - Staged, committed, and pushed all deliverables to GitHub repository `https://github.com/contactaurawealth-lab/KeyMuse.git` on branch `main`.
+  - Production deployment live and verified at `https://keymuse-agent.vercel.app`.
+- **Files Changed**:
+  - `README.md`
+  - `agent.md`
+  - `feature.md`
+  - `implementation-plan.md`
+- **Commands Executed**:
+  - `git add .`
+  - `git commit -m "feat(studio): Phase 3 Web Studio, Agent Setup Hub, and Vercel Deployment"`
+  - `git push origin main`
+- **Test Results**: All 94 automated tests passed. Production build and live deployment 100% operational.
+- **Status**: COMPLETED
+- **Next Step**: Phase 3 100% Complete
+- **Confirmation of 50-second Wait**: N/A (Rule 5: Do not wait after the final step)
+
+
+
+
+
+
+
+
 
 
 

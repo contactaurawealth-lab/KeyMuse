@@ -1,0 +1,8 @@
+{
+  "name": "keymuse",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix frontend install --ignore-platform && npm --prefix frontend run build"
+  }
+}

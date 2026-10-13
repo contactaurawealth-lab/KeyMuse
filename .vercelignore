@@ -1,0 +1,13 @@
+output/
+backend/venv/
+backend/tests/
+tests/
+.pytest_cache/
+*.pyc
+__pycache__/
+keymuse.db
+keymuse.egg-info/
+frontend/node_modules/
+frontend/dist/
+frontend/package-lock.json
+.git/

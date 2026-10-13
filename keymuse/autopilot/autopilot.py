@@ -32,8 +32,15 @@ class MusicAutopilot:
         max_iterations: int = 3,
         silence_threshold_db: float = -55.0
     ):
-        self.output_dir = os.path.abspath(output_dir)
-        os.makedirs(self.output_dir, exist_ok=True)
+        if os.getenv("VERCEL") and output_dir == "output":
+            self.output_dir = "/tmp/keymuse_output"
+        else:
+            self.output_dir = os.path.abspath(output_dir)
+        try:
+            os.makedirs(self.output_dir, exist_ok=True)
+        except OSError:
+            self.output_dir = "/tmp/keymuse_output"
+            os.makedirs(self.output_dir, exist_ok=True)
         self.sample_rate = sample_rate
         self.max_iterations = max_iterations
 

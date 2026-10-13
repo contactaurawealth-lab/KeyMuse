@@ -2,18 +2,22 @@
 > *Your Keyboard. Your Orchestra. Your AI Music Autopilot.*
 
 [![GitHub Repository](https://img.shields.io/badge/GitHub-contactaurawealth--lab%2FKeyMuse-181717?style=flat&logo=github)](https://github.com/contactaurawealth-lab/KeyMuse)
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-keymuse--agent.vercel.app-black?logo=vercel)](https://keymuse-agent.vercel.app)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)]()
-[![Tests](https://img.shields.io/badge/Tests-81%2F81%20Passing-brightgreen)]()
-[![Python](https://img.shields.io/badge/Python-3.12%20%7C%203.13-blue)]()
+[![Tests](https://img.shields.io/badge/Tests-94%2F94%20Passing-brightgreen)]()
+[![Python](https://img.shields.io/badge/Python-3.12%20%7C%203.13%20%7C%203.14-blue)]()
 [![MCP Ready](https://img.shields.io/badge/MCP-2.3%20Compatible-purple)]()
 [![License](https://img.shields.io/badge/License-MIT-amber)]()
 
-**KeyMuse** is a comprehensive, Python-first music composition platform, browser-based musical instrument studio, and autonomous AI Music Autopilot.
+**KeyMuse** is a comprehensive, Python-first music composition platform, browser-based musical instrument studio, and autonomous AI Music Autopilot with dedicated Agent Orchestration.
+
+🌐 **Live Web Studio & Agent Hub**: [https://keymuse-agent.vercel.app](https://keymuse-agent.vercel.app)
 
 ---
 
 ## 🚀 Quick Navigation
 
+- [🌐 Phase 3: Web Studio & Agent Setup Hub](#-phase-3-web-studio--agent-setup-hub)
 - [🌟 Phase 2: AI Music Autopilot](#-phase-2-ai-music-autopilot)
 - [🤖 Model Context Protocol (MCP) Server](#-model-context-protocol-mcp-server)
 - [🎬 End-to-End Cinematic Example](#-end-to-end-cinematic-example)
@@ -22,6 +26,39 @@
 - [🧪 Automated Test Suite](#-automated-test-suite)
 - [⌨️ Keyboard Shortcuts](#-keyboard-shortcuts)
 - [📄 License & Limitations](#-license--limitations)
+
+---
+
+## 🌐 Phase 3: Web Studio & Agent Setup Hub
+
+KeyMuse Phase 3 delivers an end-to-end web experience combining a **Human AI Music Studio** and a dedicated **Connect Your AI Agent** self-service hub, deployed in production on Vercel at **[https://keymuse-agent.vercel.app](https://keymuse-agent.vercel.app)**.
+
+### 1. Human AI Music Studio (`AiStudio.tsx`)
+- **Natural Language Briefs**: Describe desired music in plain English with 4 preconfigured style presets (*Cinematic Sci-Fi*, *Cyberpunk Pulse*, *Lofi Ambient Chill*, *Epic Orchestral Climax*).
+- **Musical Controls**: Fine-tune tempo (40–240 BPM), key root (`C` to `B`), musical mode (*major*, *minor*, *dorian*, *mixolydian*, *lydian*, *phrygian*, *locrian*, *pentatonic*, *blues*), target duration (5–300s), deterministic seed, and 6 active voice toggles.
+- **Real Audio Previewer**: Transport controls (Play, Pause, Replay, Scrubber, Volume) with real-time waveform visualizer bars driven by true 16-bit PCM WAV rendering.
+- **Empirical Audio Quality Inspector**: Displays exact measurable parameters directly from the backend analysis engine:
+  - Peak dBFS & headroom safety indicator
+  - RMS loudness level
+  - Real-time clipping risk assessment (0 clips / safe limiter guarantee)
+  - Silence boundary measurements (initial lead-in & trailing decay in seconds)
+- **Arrangement & Track Structure**: Visual section timelines (*Intro*, *Build*, *Climax*, *Resolution*) with dynamic energy percentages, instrument role tags, and per-track isolated stem WAV downloads.
+- **Closed-Loop Revision Suite**: Apply targeted post-composition edits (gain adjustments in dB, tempo rescaling in BPM, and custom musical instructions) without regenerating from scratch.
+- **Export Suite**: One-click download of Master Mixdown (WAV), Standard MIDI File Type 0, Canonical Project Schema (JSON), and Audit Manifest (`report.json`).
+
+### 2. Dedicated "Connect Your AI Agent" Setup Hub (`AgentSetupHub.tsx`)
+- **Interactive Onboarding Wizard**: Filter setup guides by target Operating System (**Linux**, **macOS**, **Windows**).
+- **Verified Coding Agent Configurations**: Exact, copyable setup configurations and verification commands for:
+  - **Google Antigravity**: Configuration file `~/.gemini/config/mcp_config.json` with stdio transport.
+  - **Claude Code / Claude Desktop**: `claude_desktop_config.json` or `~/.claude.json`.
+  - **OpenAI Codex**: `codex_tools.json` / command-line agent invocations.
+  - **Cursor IDE**: `~/.cursor/mcp.json`.
+  - **VSCode / Cline**: `cline_mcp_settings.json`.
+- **Live 15-Tool MCP Directory**: Dynamic tool introspection querying `keymuse.mcp.server.MCPServer` in real-time. Includes instantaneous text search filter, categorized badges (*Planning*, *Project*, *Harmonics*, *Arrangement*, *Rendering*, *Quality*, *Revisions*, *Export*, *Orchestration*), complete argument schemas, and one-click copyable tool call payloads.
+- **Python SDK Documentation**: Installation instructions (`pip install keymuse`), synchronous quickstart, non-blocking asynchronous execution, and task polling examples.
+- **Expandable Troubleshooting FAQ**: Solutions for missing packages, custom virtual environments, audio backend questions, and stdio execution.
+- **Sandboxed Security Overview**: Sandboxed filesystem isolation (`resolve_safe_path`), resource ceilings, and stdio execution protection.
+- **Interactive Connection Checklist**: 7-point progress tracker with persistent `localStorage` state.
 
 ---
 
@@ -192,19 +229,19 @@ KeyMuse also features a full-featured browser-based musical instrument studio:
 KeyMuse maintains comprehensive testing across frontend Web Audio, backend API, pure Python synthesis, and AI Autopilot:
 
 ```bash
-# 1. Run Python Autopilot & Backend Tests (37 tests)
+# 1. Run Python Autopilot & Backend Tests (40 tests)
 pytest tests/ backend/tests/
 
-# 2. Run Frontend Web Studio Tests (44 tests)
+# 2. Run Frontend Web Studio & Agent Hub Tests (54 tests)
 cd frontend && npm test
 ```
 
 | Test Suite | Modules | Tests | Outcome |
 | :--- | :--- | :--- | :--- |
 | **Autopilot Unit & DSP Tests** | 12 files | 34 tests | ✅ 34 PASSED |
-| **FastAPI Backend Tests** | 2 files | 3 tests | ✅ 3 PASSED |
-| **Frontend Web Audio Tests** | 12 files | 44 tests | ✅ 44 PASSED |
-| **Total Automated Tests** | **26 files** | **81 tests** | **100% PASS** |
+| **FastAPI Backend & Autopilot API** | 3 files | 6 tests | ✅ 6 PASSED |
+| **Frontend Web Audio & Phase 3 UI** | 14 files | 54 tests | ✅ 54 PASSED |
+| **Total Automated Tests** | **29 files** | **94 tests** | **100% PASS** |
 
 ---
 

@@ -1,7 +1,7 @@
 import os
 from sqlmodel import SQLModel, create_engine, Session
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./keymuse.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/keymuse.db" if os.getenv("VERCEL") else "sqlite:///./keymuse.db")
 
 connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
 engine = create_engine(DATABASE_URL, echo=False, connect_args=connect_args)

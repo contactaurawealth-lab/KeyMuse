@@ -178,3 +178,53 @@ keymuse/
    - Implements official MCP SDK (`mcp>=2.3.0`) tool server.
    - Exposes safe, validated tools for AI coding agents (`keymuse_plan_composition`, `keymuse_render_preview`, `keymuse_analyze_audio`, `keymuse_revise_project`, etc.).
 
+---
+
+## 9. Phase 3 — Web Studio & Agent Setup Hub Specification
+
+### 9.1 Human AI Music Studio (`frontend/src/components/AiStudio.tsx`)
+1. **Interactive Prompt Composer**:
+   - Natural language brief input textarea with 4 instant musical style presets.
+   - Granular musical controls: Tempo (BPM), Key, Mode (9 diatonic and modern modes), Target Duration slider (5-300s), Deterministic Seed input, and 6 active voice toggles.
+2. **Audio Transport & Waveform Display**:
+   - HTML5 `<audio>` playback with interactive scrub bar, play/pause, time/duration labels, volume fader, and real-time visualizer waveform.
+3. **Objective Audio Quality Inspector**:
+   - Renders exact metrics: Peak dBFS, RMS level, clipping risk detection (0 clips / safe headroom guarantee), and silence boundaries (lead-in & trailing decay in seconds).
+4. **Arrangement & Track Structure View**:
+   - Dynamic energy progression bars for each structural section (Intro, Build, Climax, Resolution).
+   - Per-track metadata tags with individual stem WAV download buttons.
+5. **Closed-Loop Surgical Revision Suite**:
+   - Direct controls for gain adjustments (dB), tempo adjustments (BPM), and custom revision instructions calling `POST /api/autopilot/revise`.
+6. **Multi-Format Export Suite**:
+   - Direct download links for Master Mixdown (WAV), Standard MIDI File (SMF Type 0), Project Schema (JSON), and Audit Manifest (`report.json`).
+
+### 9.2 Dedicated "Connect Your AI Agent" Setup Hub (`frontend/src/components/AgentSetupHub.tsx`)
+1. **Cross-Platform Compatibility**:
+   - Interactive OS selector (Linux, macOS, Windows) dynamically adapting command syntax, paths, and environment activation.
+2. **Supported Coding Agent Setup Guides**:
+   - Step-by-step setup and verified configuration snippets for Google Antigravity, Claude Code / Desktop, OpenAI Codex, Cursor IDE, and VSCode / Cline.
+3. **Dynamic MCP Tool Reference**:
+   - Real-time tool introspection connecting to `keymuse.mcp.server.MCPServer` via `GET /api/autopilot/tools`.
+   - Real-time search filter across all 15 MCP tools, argument schemas, categorized badges, and copyable JSON tool call snippets.
+4. **Python SDK Guide & Troubleshooting**:
+   - Complete package installation, synchronous composition, async tasks, and FAQ accordion.
+5. **Sandboxed Security & Persistent Checklist**:
+   - Path traversal isolation (`resolve_safe_path`), resource ceilings (600s, 32 tracks, 50k notes).
+   - 7-point interactive verification checklist persisted in `localStorage`.
+
+### 9.3 Backend Autopilot Router & Serverless Architecture
+1. **Router Endpoints (`backend/app/routers/autopilot.py`)**:
+   - `GET /api/autopilot/metadata`: Dynamic package version, Git repository URL, supported agents.
+   - `GET /api/autopilot/tools`: Dynamic introspection of 15 MCP tools.
+   - `POST /api/autopilot/compose`: Executes pure Python DSP audio composition.
+   - `POST /api/autopilot/revise`: Surgical closed-loop revisions and audio re-synthesis.
+   - `GET /api/autopilot/projects/{id}/audio`: 16-bit PCM WAV streaming.
+   - `GET /api/autopilot/projects/{id}/midi`: SMF Type 0 binary download.
+   - `GET /api/autopilot/projects/{id}/stems/{stem}`: Isolated stem WAV downloads.
+   - `GET /api/autopilot/projects/{id}/manifest`: Audit report and metrics manifest.
+   - `GET /api/autopilot/projects/{id}/project`: Canonical project JSON schema.
+2. **Vercel Serverless Production Deployment**:
+   - Live URL: `https://keymuse-agent.vercel.app`
+   - Entrypoint: `api/index.py` with `/tmp` sandboxing (`/tmp/keymuse_output`).
+
+
