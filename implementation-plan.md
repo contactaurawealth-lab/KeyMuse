@@ -366,9 +366,29 @@ KeyMuse is developed across 17 structured phases. After completing each phase, a
 
 ## Phase 14 — MIDI and Advanced Controls
 - **Objectives**: Web MIDI API input handling, note-on/off, velocity sensitivity, device picker, keyboard shortcut cheat sheet, undo/redo state management.
-- **Status**: PENDING
+- **Changes Made**:
+  - Implemented `MidiModal.tsx` providing Web MIDI hardware device scanner, device selector, live MIDI input event monitor, and comprehensive keyboard shortcut guide.
+  - Connected `MidiEngine` to real-time studio note triggering with dynamic velocity scaling.
+  - Implemented multi-step stateful Undo / Redo history stack in `AudioStateContext.tsx` supporting up to 20 snapshots across custom key mappings, instrument selection, octave shifts, pitch transpose, and BPM adjustments.
+  - Integrated Undo / Redo toolbar buttons into `Header.tsx` with dynamic enabled/disabled opacity states.
+  - Mounted `MidiModal` in `App.tsx` and linked to Header MIDI button.
+  - Built unit tests in `MidiEngine.test.ts` verifying hardware NoteOn/NoteOff translation, zero-velocity note-off compliance, and Type 0 SMF tempo meta event generation.
+  - Executed Vitest test suite: 40 tests passing across all 11 test files.
+  - Verified TypeScript compilation: 0 errors.
+- **Files Changed**:
+  - `frontend/src/components/MidiModal.tsx`
+  - `frontend/src/context/AudioStateContext.tsx`
+  - `frontend/src/components/Header.tsx`
+  - `frontend/src/audio/MidiEngine.test.ts`
+  - `frontend/src/App.tsx`
+- **Commands Executed**:
+  - `npx vitest run` (40 tests passed in 11 test files)
+  - `npx tsc --noEmit` (0 errors)
+- **Test Results**: All 40 unit tests passed, zero compiler errors.
+- **Known Defects**: None.
+- **Status**: COMPLETED
 - **Next Phase**: Phase 15 — Comprehensive QA
-- **50-second Wait**: Scheduled
+- **Confirmation of 50-second Wait**: Scheduled upon completion of Phase 14 verification.
 
 ---
 

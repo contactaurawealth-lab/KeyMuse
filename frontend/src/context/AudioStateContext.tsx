@@ -188,8 +188,30 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   // History Stack for Undo/Redo
-  const historyRef = useRef<any[]>([]);
-  const futureRef = useRef<any[]>([]);
+  interface StudioSnapshot {
+    layers: LayerMapping[];
+    selectedInstrument: InstrumentType;
+    octaveOffset: number;
+    transpose: number;
+    bpm: number;
+  }
+
+  const [history, setHistory] = useState<StudioSnapshot[]>([]);
+  const [future, setFuture] = useState<StudioSnapshot[]>([]);
+
+  const pushSnapshot = useCallback(() => {
+    setHistory((prev) => [
+      ...prev.slice(-19),
+      {
+        layers,
+        selectedInstrument,
+        octaveOffset,
+        transpose,
+        bpm
+      }
+    ]);
+    setFuture([]);
+  }, [layers, selectedInstrument, octaveOffset, transpose, bpm]);
 
   // Initialize Audio Graph once
   const graphInitialized = useRef(false);
@@ -283,6 +305,7 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const updateKeyMapping = (layerIdx: number, code: string, note: string) => {
+    pushSnapshot();
     setLayers((prev) => {
       const next = [...prev];
       if (next[layerIdx]?.keys[code]) {
@@ -293,6 +316,7 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const resetMappings = () => {
+    pushSnapshot();
     setLayers(DEFAULT_LAYERS);
   };
 
@@ -452,8 +476,37 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   // Undo / Redo
-  const undo = () => {};
-  const redo = () => {};
+  const undo = () => {
+    if (history.length === 0) return;
+    const previous = history[history.length - 1];
+    setFuture((prev) => [
+      { layers, selectedInstrument, octaveOffset, transpose, bpm },
+      ...prev
+    ]);
+    setHistory((prev) => prev.slice(0, -1));
+
+    setLayers(previous.layers);
+    setSelectedInstrumentState(previous.selectedInstrument);
+    setOctaveOffset(previous.octaveOffset);
+    setTranspose(previous.transpose);
+    setBpmState(previous.bpm);
+  };
+
+  const redo = () => {
+    if (future.length === 0) return;
+    const next = future[0];
+    setHistory((prev) => [
+      ...prev,
+      { layers, selectedInstrument, octaveOffset, transpose, bpm }
+    ]);
+    setFuture((prev) => prev.slice(1));
+
+    setLayers(next.layers);
+    setSelectedInstrumentState(next.selectedInstrument);
+    setOctaveOffset(next.octaveOffset);
+    setTranspose(next.transpose);
+    setBpmState(next.bpm);
+  };
 
   return (
     <AudioStateContext.Provider
@@ -538,8 +591,8 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
         undo,
         redo,
-        canUndo: false,
-        canRedo: false
+        canUndo: history.length > 0,
+        canRedo: future.length > 0
       }}
     >
       {children}

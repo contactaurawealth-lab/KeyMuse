@@ -11,6 +11,7 @@ import { MixerEffects } from './components/MixerEffects';
 import { LoopStation } from './components/LoopStation';
 import { MappingEditor } from './components/MappingEditor';
 import { SettingsModal } from './components/StateModals';
+import { MidiModal } from './components/MidiModal';
 import { INSTRUMENTS } from './constants/instruments';
 import { useAudioState } from './context/AudioStateContext';
 import { useKeyboardInput } from './hooks/useKeyboardInput';
@@ -137,6 +138,7 @@ export default function App() {
 
       <MappingEditor isOpen={isMappingsOpen} onClose={() => setIsMappingsOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <MidiModal isOpen={isMidiOpen} onClose={() => setIsMidiOpen(false)} />
     </div>
   );
 }

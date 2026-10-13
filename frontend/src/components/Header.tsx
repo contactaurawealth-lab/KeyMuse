@@ -1,6 +1,19 @@
 import React from 'react';
 import { useAudioState } from '../context/AudioStateContext';
-import { Volume2, VolumeX, Moon, Sun, Play, Square, Settings, Music, Sliders, AlertOctagon } from 'lucide-react';
+import {
+  Volume2,
+  VolumeX,
+  Moon,
+  Sun,
+  Play,
+  Square,
+  Settings,
+  Music,
+  Sliders,
+  AlertOctagon,
+  RotateCcw,
+  RotateCw
+} from 'lucide-react';
 
 interface HeaderProps {
   onOpenSettings: () => void;
@@ -27,7 +40,11 @@ export const Header: React.FC<HeaderProps> = ({
     updateEffects,
     theme,
     toggleTheme,
-    stopAllNotes
+    stopAllNotes,
+    undo,
+    redo,
+    canUndo,
+    canRedo
   } = useAudioState();
 
   const handleOctaveDown = () => setOctaveOffset((prev) => Math.max(-3, prev - 1));
@@ -156,6 +173,28 @@ export const Header: React.FC<HeaderProps> = ({
             style={{ width: '70px' }}
             title={`Master Volume: ${Math.round(effects.masterVolume * 100)}%`}
           />
+        </div>
+
+        {/* Undo / Redo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <button
+            onClick={undo}
+            disabled={!canUndo}
+            className="studio-btn"
+            style={{ opacity: canUndo ? 1 : 0.4, padding: '6px 8px' }}
+            title="Undo (Ctrl+Z)"
+          >
+            <RotateCcw size={13} />
+          </button>
+          <button
+            onClick={redo}
+            disabled={!canRedo}
+            className="studio-btn"
+            style={{ opacity: canRedo ? 1 : 0.4, padding: '6px 8px' }}
+            title="Redo (Ctrl+Y)"
+          >
+            <RotateCw size={13} />
+          </button>
         </div>
 
         {/* Panic Button */}
