@@ -4,6 +4,7 @@
   --bg-tertiary: #242731;
   --bg-surface: #2b2f3b;
   --border-subtle: #363a48;
+  --border-color: #363a48;
   --border-focus: #00d2c4;
   --text-primary: #f3f4f6;
   --text-secondary: #9ca3af;
@@ -35,6 +36,7 @@
   --bg-tertiary: #e2e8f0;
   --bg-surface: #ffffff;
   --border-subtle: #cbd5e1;
+  --border-color: #cbd5e1;
   --border-focus: #0d9488;
   --text-primary: #0f172a;
   --text-secondary: #475569;
@@ -87,7 +89,20 @@ button {
   outline: none;
 }
 
-button:focus-visible {
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
   outline: 2px solid var(--border-focus);
   outline-offset: 2px;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
