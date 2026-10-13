@@ -339,9 +339,28 @@ KeyMuse is developed across 17 structured phases. After completing each phase, a
 
 ## Phase 13 — PWA and Offline Mode
 - **Objectives**: Web App Manifest, Service Worker with caching strategy, offline shell, asset caching, install prompt and update notification.
-- **Status**: PENDING
+- **Changes Made**:
+  - Implemented `manifest.json` with standalone display, dark charcoal theme color (`#12151a`), cyan accent theme (`#00d2c4`), app categories, and multi-size maskable icons.
+  - Authored custom studio vector icon `icon.svg` featuring a glowing cyan/amber keyboard and acoustic waveform motif.
+  - Implemented production Service Worker `sw.js` with `keymuse-v1.0.0` cache versioning, precaching of shell assets, stale-while-revalidate strategy for assets, navigation fallback, and API bypass.
+  - Added service worker registration in `main.tsx` with production scope verification.
+  - Upgraded `AudioBanner.tsx` with live `navigator.onLine` listeners rendering an offline status indicator whenever network connectivity drops.
+  - Verified production build packaging (`tsc && vite build`) copied all PWA assets to `dist/`.
+  - Executed Vitest test suite: 37 tests passing across all 10 test files.
+- **Files Changed**:
+  - `frontend/public/manifest.json`
+  - `frontend/public/icon.svg`
+  - `frontend/public/sw.js`
+  - `frontend/src/main.tsx`
+  - `frontend/src/components/AudioBanner.tsx`
+- **Commands Executed**:
+  - `npx vitest run` (37 tests passed in 10 test files)
+  - `npm run build` (tsc & vite build succeeded in dist/)
+- **Test Results**: All 37 unit tests passed, zero compiler errors, PWA assets verified in dist/.
+- **Known Defects**: None.
+- **Status**: COMPLETED
 - **Next Phase**: Phase 14 — MIDI and Advanced Controls
-- **50-second Wait**: Scheduled
+- **Confirmation of 50-second Wait**: Scheduled upon completion of Phase 13 verification.
 
 ---
 

@@ -1,0 +1,19 @@
+{
+  "name": "KeyMuse — Virtual Musical Instrument Studio",
+  "short_name": "KeyMuse",
+  "description": "Your Keyboard. Your Orchestra. High-fidelity browser-based musical studio.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#12151a",
+  "theme_color": "#00d2c4",
+  "categories": ["music", "productivity", "entertainment"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
