@@ -1,0 +1,277 @@
+{
+  "task_id": "task_220bc2a0001c",
+  "status": "completed",
+  "brief": {
+    "description": "A 60-second peaceful, gentle, soothing acoustic ambient lullaby in C major at 70 BPM. Features warm acoustic piano with delicate felt hammer strikes, lush serene ambient pad, soft acoustic guitar arpeggios, and gentle orchestral strings. Calm, tranquil, meditative, and peaceful. Smooth gentle finish.",
+    "intended_use": "soundtrack",
+    "genre": "ambient",
+    "subgenre": "atmospheric",
+    "mood": "mysterious, tense, powerful",
+    "energy": 0.4,
+    "target_duration": 60.0,
+    "tempo": 70.0,
+    "tempo_range": null,
+    "time_signature": "4/4",
+    "key": "C",
+    "mode": "major",
+    "desired_instruments": [
+      "atmospheric_pad",
+      "piano",
+      "orchestral_strings"
+    ],
+    "track_count": 4,
+    "arrangement_structure": [
+      "intro",
+      "build",
+      "climax",
+      "resolution"
+    ],
+    "opening": "atmospheric introduction",
+    "ending": "clean, resolved finish",
+    "references": [],
+    "complexity": "moderate",
+    "export_formats": [
+      "wav",
+      "midi"
+    ],
+    "explicit_restrictions": [],
+    "constraints": {
+      "min_duration": null,
+      "max_duration": null,
+      "required_instruments": [],
+      "banned_instruments": [],
+      "max_tracks": 16,
+      "required_sections": [],
+      "max_peak_db": -0.5,
+      "target_lufs": -14.0
+    },
+    "inferred": {
+      "inferred_tempo": false,
+      "inferred_key": false,
+      "inferred_mode": false,
+      "inferred_structure": true,
+      "inferred_instruments": false,
+      "provider_used": "deterministic-rule-engine"
+    },
+    "seed": 42
+  },
+  "plan": {
+    "brief_id": "brief-68173",
+    "title": "Ambient Atmospheric in C major",
+    "tempo": 70.0,
+    "key": "C",
+    "mode": "major",
+    "time_signature": "4/4",
+    "total_duration_seconds": 61.71428571428571,
+    "total_beats": 72.0,
+    "sections": [
+      {
+        "name": "Intro",
+        "start_beat": 0.0,
+        "length_beats": 16.0,
+        "energy": 0.3,
+        "dynamic_level": "p",
+        "active_track_ids": [
+          "track_pad",
+          "track_piano_1",
+          "track_orchestral_strings_2"
+        ],
+        "transition_type": "fade_in"
+      },
+      {
+        "name": "Build",
+        "start_beat": 16.0,
+        "length_beats": 20.0,
+        "energy": 0.6,
+        "dynamic_level": "mf",
+        "active_track_ids": [
+          "track_pad",
+          "track_piano_1",
+          "track_orchestral_strings_2"
+        ],
+        "transition_type": "swell"
+      },
+      {
+        "name": "Climax",
+        "start_beat": 36.0,
+        "length_beats": 24.0,
+        "energy": 0.95,
+        "dynamic_level": "ff",
+        "active_track_ids": [
+          "track_pad",
+          "track_piano_1",
+          "track_orchestral_strings_2"
+        ],
+        "transition_type": "drop"
+      },
+      {
+        "name": "Resolution",
+        "start_beat": 60.0,
+        "length_beats": 12.0,
+        "energy": 0.35,
+        "dynamic_level": "mp",
+        "active_track_ids": [
+          "track_pad",
+          "track_piano_1",
+          "track_orchestral_strings_2"
+        ],
+        "transition_type": "ritardando"
+      }
+    ],
+    "tracks": [
+      {
+        "track_id": "track_pad",
+        "name": "Atmospheric Pad",
+        "instrument": "atmospheric_pad",
+        "role": "harmony",
+        "pitch_register": "mid",
+        "polyphony_limit": 4,
+        "volume": 0.75,
+        "pan": -0.25
+      },
+      {
+        "track_id": "track_piano_1",
+        "name": "Acoustic Piano",
+        "instrument": "piano",
+        "role": "harmony",
+        "pitch_register": "mid",
+        "polyphony_limit": 6,
+        "volume": 0.8,
+        "pan": 0.0
+      },
+      {
+        "track_id": "track_orchestral_strings_2",
+        "name": "Orchestral Strings",
+        "instrument": "orchestral_strings",
+        "role": "harmony",
+        "pitch_register": "mid",
+        "polyphony_limit": 4,
+        "volume": 0.75,
+        "pan": 0.25
+      }
+    ],
+    "seed": 42
+  },
+  "project_summary": {
+    "id": "proj_70598",
+    "title": "Ambient Atmospheric in C major",
+    "version": 2,
+    "tracks": [
+      "Atmospheric Pad",
+      "Acoustic Piano",
+      "Orchestral Strings"
+    ],
+    "total_notes": 162,
+    "duration_seconds": 61.71428571428571
+  },
+  "initial_analysis": {
+    "duration_seconds": 63.714,
+    "sample_rate": 44100,
+    "channels": 2,
+    "peak_amplitude": 0.7939,
+    "peak_db": -2.0,
+    "rms_level": 0.1086,
+    "rms_db": -19.28,
+    "clipping_risk": false,
+    "start_silence_seconds": 0.0,
+    "end_silence_seconds": 1.267,
+    "unexpected_gaps": [],
+    "checks": [
+      {
+        "name": "AntiClippingCheck",
+        "status": "passed",
+        "message": "Peak level (-2.00 dBFS) safely within limiter ceiling.",
+        "measured_value": -2.0,
+        "expected_value": -0.5
+      },
+      {
+        "name": "DurationCheck",
+        "status": "warning",
+        "message": "Audio duration (63.71s) deviates from target (60.00s).",
+        "measured_value": 63.71,
+        "expected_value": 60.0
+      },
+      {
+        "name": "RMSLoudnessCheck",
+        "status": "passed",
+        "message": "Signal energy (-19.28 dBFS) is healthy.",
+        "measured_value": -19.28,
+        "expected_value": "-20 to -14 dBFS"
+      },
+      {
+        "name": "StereoChannelCheck",
+        "status": "passed",
+        "message": "Rendered in stereo (2 channel(s)).",
+        "measured_value": 2,
+        "expected_value": 2
+      }
+    ]
+  },
+  "revision_plan": {
+    "iteration": 1,
+    "reason": "Addressed 1 detected audio/musical constraints.",
+    "detected_issues": [
+      "Optional master dynamic balance polish."
+    ],
+    "edits": [
+      {
+        "action_type": "adjust_volume",
+        "target": "all_tracks",
+        "parameters": {
+          "gain_factor": 0.95,
+          "polish": true
+        }
+      }
+    ]
+  },
+  "final_analysis": {
+    "duration_seconds": 63.714,
+    "sample_rate": 44100,
+    "channels": 2,
+    "peak_amplitude": 0.7939,
+    "peak_db": -2.0,
+    "rms_level": 0.1086,
+    "rms_db": -19.28,
+    "clipping_risk": false,
+    "start_silence_seconds": 0.0,
+    "end_silence_seconds": 1.267,
+    "unexpected_gaps": [],
+    "checks": [
+      {
+        "name": "AntiClippingCheck",
+        "status": "passed",
+        "message": "Peak level (-2.00 dBFS) safely within limiter ceiling.",
+        "measured_value": -2.0,
+        "expected_value": -0.5
+      },
+      {
+        "name": "DurationCheck",
+        "status": "warning",
+        "message": "Audio duration (63.71s) deviates from target (60.00s).",
+        "measured_value": 63.71,
+        "expected_value": 60.0
+      },
+      {
+        "name": "RMSLoudnessCheck",
+        "status": "passed",
+        "message": "Signal energy (-19.28 dBFS) is healthy.",
+        "measured_value": -19.28,
+        "expected_value": "-20 to -14 dBFS"
+      },
+      {
+        "name": "StereoChannelCheck",
+        "status": "passed",
+        "message": "Rendered in stereo (2 channel(s)).",
+        "measured_value": 2,
+        "expected_value": 2
+      }
+    ]
+  },
+  "exports": {
+    "audio": "/root/keymuse/frontend/public/audio/task_220bc2a0001c/audio.wav",
+    "midi": "/root/keymuse/frontend/public/audio/task_220bc2a0001c/composition.mid",
+    "project": "/root/keymuse/frontend/public/audio/task_220bc2a0001c/project.json",
+    "stems_dir": "/root/keymuse/frontend/public/audio/task_220bc2a0001c/stems"
+  },
+  "execution_time_seconds": 48.42
+}

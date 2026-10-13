@@ -102,8 +102,52 @@ const PRESET_BRIEFS = [
     key: 'G',
     mode: 'minor',
     duration: 60
+  },
+  {
+    title: '60s Soothing Lullaby',
+    prompt: 'A 60-second peaceful, gentle, soothing acoustic ambient lullaby in C major at 70 BPM. Features warm acoustic piano with delicate felt hammer strikes, lush serene ambient pad, and gentle orchestral strings.',
+    bpm: 70,
+    key: 'C',
+    mode: 'major',
+    duration: 60
   }
 ];
+
+export const FEATURED_SOOTHING_TUNE: CompositionResult = {
+  status: 'completed',
+  project_id: 'task_220bc2a0001c',
+  title: '60s Soothing Acoustic Lullaby in C Major',
+  bpm: 70,
+  key: 'C',
+  mode: 'major',
+  duration_seconds: 63.71,
+  total_tracks: 3,
+  total_notes: 162,
+  tracks: [
+    { id: 'track_piano_1', name: 'Acoustic Grand Piano', instrument: 'piano', volume: 0.8, pan: 0.0, note_count: 72 },
+    { id: 'track_pad', name: 'Atmospheric Pad', instrument: 'atmospheric_pad', volume: 0.75, pan: -0.25, note_count: 48 },
+    { id: 'track_orchestral_strings_2', name: 'Orchestral Strings', instrument: 'orchestral_strings', volume: 0.75, pan: 0.25, note_count: 42 }
+  ],
+  sections: [
+    { name: 'Intro', start_beat: 0, length_beats: 16, energy: 0.3, description: 'Delicate acoustic piano hammer strikes with lush ambient pad bed' },
+    { name: 'Build', start_beat: 16, length_beats: 20, energy: 0.6, description: 'Gentle swell introducing orchestral string counter-harmonies' },
+    { name: 'Climax', start_beat: 36, length_beats: 24, energy: 0.95, description: 'Rich acoustic grand piano trichords with singing resonance' },
+    { name: 'Resolution', start_beat: 60, length_beats: 12, energy: 0.35, description: 'Tranquil ritardando fade into natural acoustic tail' }
+  ],
+  analysis: {
+    actual_duration: 63.71,
+    peak_dbfs: -2.0,
+    rms_dbfs: -19.28,
+    clipping_detected: false,
+    start_silence_seconds: 0.0,
+    end_silence_seconds: 1.27
+  },
+  audio_url: '/audio/soothing_tune_60s.wav',
+  midi_url: '/audio/soothing_tune_60s.mid',
+  stems: [],
+  manifest_url: '/audio/soothing_tune_60s.json',
+  project_json_url: '/audio/soothing_tune_60s.json'
+};
 
 export const AiStudio: React.FC = () => {
   // Input parameters
@@ -766,14 +810,31 @@ export const AiStudio: React.FC = () => {
                 justifyContent: 'center',
                 alignItems: 'center',
                 color: 'var(--text-secondary)',
-                gap: '8px'
+                gap: '8px',
+                textAlign: 'center',
+                padding: '16px'
               }}
             >
               <Music size={32} opacity={0.4} />
-              <p style={{ margin: 0, fontSize: '13px' }}>No composition rendered yet.</p>
+              <p style={{ margin: 0, fontSize: '13px' }}>No custom composition rendered yet.</p>
               <p style={{ margin: 0, fontSize: '11px', opacity: 0.7 }}>
-                Enter a music brief and click "Compose Music Autopilot" to generate real audio.
+                Enter a music brief above or load our featured 60s soothing tune master.
               </p>
+              <button
+                onClick={() => setCompositionResult(FEATURED_SOOTHING_TUNE)}
+                className="studio-btn studio-btn-primary"
+                style={{
+                  marginTop: '8px',
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 14px'
+                }}
+              >
+                <Sparkles size={14} />
+                <span>Load 60s Soothing Acoustic Master</span>
+              </button>
             </div>
           )}
         </div>

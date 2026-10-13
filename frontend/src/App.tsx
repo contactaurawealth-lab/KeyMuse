@@ -14,10 +14,11 @@ import { SettingsModal } from './components/StateModals';
 import { MidiModal } from './components/MidiModal';
 import { AiStudio } from './components/AiStudio';
 import { AgentSetupHub } from './components/AgentSetupHub';
+import { SoothingAudioPlayer } from './components/SoothingAudioPlayer';
 import { INSTRUMENTS } from './constants/instruments';
 import { useAudioState } from './context/AudioStateContext';
 import { useKeyboardInput } from './hooks/useKeyboardInput';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Music } from 'lucide-react';
 import './styles/theme.css';
 import './styles/studio.css';
 
@@ -32,7 +33,7 @@ export default function App() {
   useKeyboardInput();
 
   const [currentView, setCurrentView] = useState<'studio' | 'agent-hub'>('studio');
-  const [activeTab, setActiveTab] = useState<'keys' | 'ai-studio' | 'instruments' | 'drums' | 'mixer' | 'recorder'>('keys');
+  const [activeTab, setActiveTab] = useState<'soothing-tune' | 'keys' | 'ai-studio' | 'instruments' | 'drums' | 'mixer' | 'recorder'>('soothing-tune');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMappingsOpen, setIsMappingsOpen] = useState(false);
   const [isMidiOpen, setIsMidiOpen] = useState(false);
@@ -58,6 +59,20 @@ export default function App() {
           <>
             {/* Studio Navigation Tabs */}
             <nav className="studio-tabs">
+              <button
+                onClick={() => setActiveTab('soothing-tune')}
+                className={`tab-btn ${activeTab === 'soothing-tune' ? 'active' : ''}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  color: activeTab === 'soothing-tune' ? 'var(--accent-cyan)' : undefined,
+                  fontWeight: 700
+                }}
+              >
+                <Music size={14} color="var(--accent-cyan)" />
+                60s Soothing Tune
+              </button>
               <button
                 onClick={() => setActiveTab('keys')}
                 className={`tab-btn ${activeTab === 'keys' ? 'active' : ''}`}
@@ -106,8 +121,17 @@ export default function App() {
 
             {/* Dynamic Studio Workspace Content */}
             <main className="studio-content">
+              {activeTab === 'soothing-tune' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <SoothingAudioPlayer onOpenAiStudio={() => setActiveTab('ai-studio')} />
+                </div>
+              )}
+
               {activeTab === 'keys' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {/* Featured Audio Player Banner */}
+                  <SoothingAudioPlayer compact onOpenAiStudio={() => setActiveTab('ai-studio')} />
+
                   <div className="studio-card">
                     <div className="card-title">
                       <span>Physical Keyboard Studio Mapping</span>

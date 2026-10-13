@@ -261,4 +261,26 @@ Real acoustic pianos differ fundamentally from electronic synthesizers in six ac
 - **Orchestral Violin & Strings**: Dual detuned string ensemble + dual formant body filters (500 Hz & 2400 Hz) + delayed vibrato.
 - **Flute & Marimba**: Breathy turbulence + soft sinusoidal core / woody percussive resonator envelope.
 
+---
+
+## 11. Featured 60s Soothing Audio Player Architecture
+
+The production web studio features a dedicated, self-contained **60s Soothing Tune Player** (`frontend/src/components/SoothingAudioPlayer.tsx`) showcasing the physical acoustic modeling engine:
+
+1. **Audio Asset Pipeline**:
+   - Master composition rendered via `MusicAutopilot` using the real Python DSP acoustic engine (`C major`, `70 BPM`, `63.7s`).
+   - Static audio assets hosted under `frontend/public/audio/`:
+     - `soothing_tune_60s.wav`: 16-bit 44.1 kHz stereo PCM WAV master (10.7 MB).
+     - `soothing_tune_60s.mid`: Standard MIDI File SMF Type 0 (162 notes).
+     - `soothing_tune_60s.json`: Comprehensive quality audit manifest.
+2. **Interactive Transport & Waveform**:
+   - Play/Pause toggle with visual pulsating glow.
+   - 56-bar interactive waveform with click-to-seek synchronization.
+   - Dynamic section detection (Intro: 0–13.7s, Build: 13.7–30.8s, Climax: 30.8–51.4s, Resolution: 51.4–63.7s).
+   - Playback rate cycling (0.75x, 1.0x, 1.25x), loop toggle, and volume/mute fader.
+3. **Studio Integration**:
+   - Rendered as primary featured tab (`60s Soothing Tune`) in the studio navigation bar.
+   - Rendered in compact mode above the physical keyboard visualizer in the default `Piano & Keyboard` tab.
+   - One-click "Load 60s Soothing Master" in AI Studio previewer.
+
 

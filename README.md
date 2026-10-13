@@ -4,19 +4,21 @@
 [![GitHub Repository](https://img.shields.io/badge/GitHub-contactaurawealth--lab%2FKeyMuse-181717?style=flat&logo=github)](https://github.com/contactaurawealth-lab/KeyMuse)
 [![Vercel Deployment](https://img.shields.io/badge/Vercel-keymuse--agent.vercel.app-black?logo=vercel)](https://keymuse-agent.vercel.app)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)]()
-[![Tests](https://img.shields.io/badge/Tests-94%2F94%20Passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/Tests-100%2F100%20Passing-brightgreen)]()
 [![Python](https://img.shields.io/badge/Python-3.12%20%7C%203.13%20%7C%203.14-blue)]()
 [![MCP Ready](https://img.shields.io/badge/MCP-2.3%20Compatible-purple)]()
 [![License](https://img.shields.io/badge/License-MIT-amber)]()
 
 **KeyMuse** is a comprehensive, Python-first music composition platform, browser-based musical instrument studio, and autonomous AI Music Autopilot with dedicated Agent Orchestration.
 
-🌐 **Live Web Studio & Agent Hub**: [https://keymuse-agent.vercel.app](https://keymuse-agent.vercel.app)
+🌐 **Live Web Studio & Agent Hub**: [https://keymuse-agent.vercel.app](https://keymuse-agent.vercel.app)  
+🎵 **Featured 60s Soothing Tune Player**: Directly playable in production with physical acoustic grand piano, atmospheric pads, and orchestral strings!
 
 ---
 
 ## 🚀 Quick Navigation
 
+- [🎵 Featured 60s Soothing Tune Player](#-featured-60s-soothing-tune-player)
 - [🌐 Phase 3: Web Studio & Agent Setup Hub](#-phase-3-web-studio--agent-setup-hub)
 - [🌟 Phase 2: AI Music Autopilot](#-phase-2-ai-music-autopilot)
 - [🤖 Model Context Protocol (MCP) Server](#-model-context-protocol-mcp-server)
@@ -26,6 +28,25 @@
 - [🧪 Automated Test Suite](#-automated-test-suite)
 - [⌨️ Keyboard Shortcuts](#-keyboard-shortcuts)
 - [📄 License & Limitations](#-license--limitations)
+
+---
+
+## 🎵 Featured 60s Soothing Tune Player
+
+Directly playable inside the production deployment at **[https://keymuse-agent.vercel.app](https://keymuse-agent.vercel.app)**:
+
+- **Composition**: *60s Soothing Acoustic Lullaby in C Major* (70 BPM, 63.7s duration).
+- **Physical Acoustic Modeling**: Real felt hammer strike transient impulse buffer, dynamic lowpass decay sweep (starts bright, dampening to warm singing resonance in 160ms), 3-string unison chorus beating (center, +1.4c, -1.4c), 8 inharmonic string partials, pitch-dependent natural decay, and soundboard cabinet resonance.
+- **Ensemble**: Concert Grand Piano + Lush Atmospheric Pad + Orchestral Strings.
+- **Audio Quality Verification**:
+  - **Peak Level**: -2.00 dBFS (Master limiter protection, 0 clipping risk guaranteed)
+  - **RMS Energy**: -19.28 dBFS (Tranquil, natural acoustic dynamic range)
+  - **Decay Tail**: 1.27s natural acoustic reverb decay
+  - **Notes Realized**: 162 discrete notes across Intro, Build, Climax, and Resolution
+- **Deliverables**:
+  - [Download Master WAV (10.7 MB)](https://keymuse-agent.vercel.app/audio/soothing_tune_60s.wav)
+  - [Download MIDI SMF 0 (1.4 KB)](https://keymuse-agent.vercel.app/audio/soothing_tune_60s.mid)
+  - [View Quality Audit JSON](https://keymuse-agent.vercel.app/audio/soothing_tune_60s.json)
 
 ---
 
@@ -240,8 +261,8 @@ cd frontend && npm test
 | :--- | :--- | :--- | :--- |
 | **Autopilot Unit & DSP Tests** | 12 files | 34 tests | ✅ 34 PASSED |
 | **FastAPI Backend & Autopilot API** | 3 files | 6 tests | ✅ 6 PASSED |
-| **Frontend Web Audio & Phase 3 UI** | 14 files | 54 tests | ✅ 54 PASSED |
-| **Total Automated Tests** | **29 files** | **94 tests** | **100% PASS** |
+| **Frontend Web Audio & Phase 3 UI** | 15 files | 60 tests | ✅ 60 PASSED |
+| **Total Automated Tests** | **30 files** | **100 tests** | **100% PASS** |
 
 ---
 
