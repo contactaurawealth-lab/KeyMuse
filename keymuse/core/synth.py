@@ -69,15 +69,101 @@ class SynthEngine:
             return self._render_bass(freq, duration_sec, velocity)
         elif "lead" in instrument:
             return self._render_lead(freq, duration_sec, velocity)
+        elif "string" in instrument or "violin" in instrument:
+            return self._render_strings(freq, duration_sec, velocity)
+        elif "guitar" in instrument:
+            return self._render_guitar(freq, duration_sec, velocity)
         else:
-            return self._render_generic_keyboard(freq, duration_sec, velocity)
+            return self._render_piano(freq, duration_sec, velocity)
+
+    def _render_piano(self, freq: float, duration_sec: float, velocity: float) -> np.ndarray:
+        """Acoustic Concert Grand Piano Model:
+        1. Velocity-sensitive felt hammer strike transient impulse
+        2. 8 inharmonic string partials with frequency-dependent exponential damping
+        3. 3-string unison chorus with subtle detuning (beating effect)
+        4. Wooden soundboard acoustic body resonance
+        5. Pitch-dependent natural decay
+        """
+        sr = self.sample_rate
+        # Natural decay dependent on pitch (bass notes sustain up to 5.5s, treble decays in ~1.2s)
+        pitch_factor = float(np.clip(1.0 - 0.22 * np.log2(max(27.5, freq) / 261.63), 0.35, 1.8))
+        decay_time = max(1.2, min(5.5, duration_sec * 1.5 * pitch_factor))
+        release_sec = 0.35
+        total_time = max(duration_sec + release_sec, decay_time)
+        n_samples = int(total_time * sr)
+        t = np.linspace(0, total_time, n_samples, endpoint=False, dtype=np.float32)
+
+        # 1. Hammer strike transient impulse (14ms mechanical felt-on-steel impact)
+        hammer_samples = int(0.014 * sr)
+        hammer = np.zeros(n_samples, dtype=np.float32)
+        if hammer_samples > 0:
+            h_t = np.linspace(0, 0.014, hammer_samples, endpoint=False, dtype=np.float32)
+            knock_freq = min(1800.0, max(600.0, freq * 2.2))
+            h_tone = np.sin(2 * np.pi * knock_freq * h_t)
+            h_noise = np.random.uniform(-1.0, 1.0, hammer_samples).astype(np.float32)
+            h_env = np.exp(-h_t / 0.0032)
+            hammer[:hammer_samples] = (0.65 * h_tone + 0.35 * h_noise) * h_env * 0.40
+
+        # 2. 8 Inharmonic String Partials
+        # Inharmonicity parameter B for piano strings
+        B = 0.00028
+        partials = [
+            (1, 1.00, 1.0),      # Fundamental
+            (2, 0.65, 1.5),      # 2nd Harmonic
+            (3, 0.42, 2.2),      # 3rd Harmonic
+            (4, 0.25, 3.2),      # 4th Harmonic
+            (5, 0.14, 4.5),      # 5th Harmonic
+            (6, 0.08, 6.0),      # 6th Harmonic
+            (7, 0.04, 7.8),      # 7th Harmonic
+            (8, 0.02, 9.8),      # 8th Harmonic
+        ]
+
+        # 3-string unison detuning (beating effect): center, +1.4c, -1.4c
+        detune_factors = [1.0, 1.00081, 0.99919]
+        string_weights = [0.48, 0.26, 0.26]
+
+        string_sound = np.zeros(n_samples, dtype=np.float32)
+        decay_base = 1.0 / (pitch_factor * 1.1)
+
+        for s_detune, s_weight in zip(detune_factors, string_weights):
+            s_freq = freq * s_detune
+            for k, amp, decay_rate in partials:
+                p_freq = k * s_freq * np.sqrt(1.0 + B * (k ** 2))
+                if p_freq >= sr / 2.0:
+                    continue
+                damping = np.exp(-t * (decay_rate * decay_base))
+                partial_wave = np.sin(2 * np.pi * p_freq * t) * amp * damping
+                string_sound += partial_wave * s_weight
+
+        # 3. Soundboard acoustic body resonance (low-mid spruce wood fullness)
+        sb_freq = 210.0
+        sb_resonance = np.sin(2 * np.pi * sb_freq * t) * np.exp(-t * 9.0) * 0.12
+
+        # Composite piano sound
+        composite = hammer + string_sound * 0.85 + sb_resonance
+
+        # 4. Key release felt damper decay
+        gate_samples = int(duration_sec * sr)
+        if gate_samples < n_samples:
+            rel_len = n_samples - gate_samples
+            rel_t = np.linspace(0, 1.0, rel_len, endpoint=False, dtype=np.float32)
+            damper_env = np.exp(-rel_t * 7.5)
+            composite[gate_samples:] *= damper_env
+
+        # Velocity scaling: non-linear dynamics
+        vel_scale = (velocity ** 1.25) * 0.72
+        return (composite * vel_scale).astype(np.float32)
+
+    def _render_generic_keyboard(self, freq: float, duration_sec: float, velocity: float) -> np.ndarray:
+        """Fallback to physical piano model for all keyboard instruments."""
+        return self._render_piano(freq, duration_sec, velocity)
 
     def _render_pad(self, freq: float, duration_sec: float, velocity: float) -> np.ndarray:
         """Atmospheric Pad: Rich detuned dual saw/triangle with smooth attack & release."""
-        attack = 0.4
-        decay = 0.3
-        sustain = 0.8
-        release = 0.8
+        attack = 0.35
+        decay = 0.30
+        sustain = 0.80
+        release = 0.75
         total_time = duration_sec + release
         t = np.linspace(0, total_time, int(total_time * self.sample_rate), endpoint=False, dtype=np.float32)
 
@@ -85,7 +171,7 @@ class SynthEngine:
         wave1 = np.sin(2 * np.pi * freq * t)
         wave2 = np.sin(2 * np.pi * (freq * 1.004) * t) * 0.7
         sub = np.sin(2 * np.pi * (freq * 0.5) * t) * 0.3
-        raw_wave = (wave1 + wave2 + sub) * 0.4
+        raw_wave = (wave1 + wave2 + sub) * 0.42
 
         env = self._adsr_envelope(len(t), duration_sec, attack, decay, sustain, release)
         return (raw_wave * env * velocity).astype(np.float32)
@@ -94,25 +180,25 @@ class SynthEngine:
         """Bass Pulse: Punchy analog bass with rapid attack and solid sub fundamental."""
         attack = 0.02
         decay = 0.15
-        sustain = 0.7
-        release = 0.15
+        sustain = 0.70
+        release = 0.18
         total_time = duration_sec + release
         t = np.linspace(0, total_time, int(total_time * self.sample_rate), endpoint=False, dtype=np.float32)
 
         fundamental = np.sin(2 * np.pi * freq * t)
         octave_down = np.sin(2 * np.pi * (freq * 0.5) * t) * 0.5
         harmonic = (np.sin(2 * np.pi * (freq * 2.0) * t) ** 3) * 0.25
-        raw_wave = (fundamental + octave_down + harmonic) * 0.6
+        raw_wave = (fundamental + octave_down + harmonic) * 0.60
 
         env = self._adsr_envelope(len(t), duration_sec, attack, decay, sustain, release)
         return (raw_wave * env * velocity).astype(np.float32)
 
     def _render_lead(self, freq: float, duration_sec: float, velocity: float) -> np.ndarray:
         """Lead Melody: Expressive lead with slight vibrato and resonant harmonic body."""
-        attack = 0.05
-        decay = 0.2
+        attack = 0.04
+        decay = 0.18
         sustain = 0.75
-        release = 0.35
+        release = 0.32
         total_time = duration_sec + release
         t = np.linspace(0, total_time, int(total_time * self.sample_rate), endpoint=False, dtype=np.float32)
 
@@ -123,27 +209,54 @@ class SynthEngine:
         osc1 = np.sin(phase)
         osc2 = np.sin(2 * phase) * 0.4
         osc3 = np.sin(3 * phase) * 0.2
-        raw_wave = (osc1 + osc2 + osc3) * 0.5
+        raw_wave = (osc1 + osc2 + osc3) * 0.50
 
         env = self._adsr_envelope(len(t), duration_sec, attack, decay, sustain, release)
         return (raw_wave * env * velocity).astype(np.float32)
 
-    def _render_generic_keyboard(self, freq: float, duration_sec: float, velocity: float) -> np.ndarray:
-        """Harmonic acoustic/electric piano model with natural decay."""
-        attack = 0.01
-        decay = 0.4
-        sustain = 0.4
-        release = 0.25
+    def _render_strings(self, freq: float, duration_sec: float, velocity: float) -> np.ndarray:
+        """Lush Orchestral Strings: Multi-voice ensemble detuning with smooth bowed swell."""
+        attack = 0.12
+        decay = 0.25
+        sustain = 0.85
+        release = 0.55
         total_time = duration_sec + release
         t = np.linspace(0, total_time, int(total_time * self.sample_rate), endpoint=False, dtype=np.float32)
 
-        osc1 = np.sin(2 * np.pi * freq * t)
-        osc2 = np.sin(2 * np.pi * (freq * 2.0) * t) * 0.5
-        osc3 = np.sin(2 * np.pi * (freq * 3.0) * t) * 0.2
-        raw_wave = (osc1 + osc2 + osc3) * 0.5
+        # 4-voice ensemble detuning
+        s1 = np.sin(2 * np.pi * freq * t)
+        s2 = np.sin(2 * np.pi * (freq * 1.002) * t) * 0.7
+        s3 = np.sin(2 * np.pi * (freq * 0.998) * t) * 0.7
+        h1 = np.sin(2 * np.pi * (freq * 2.0) * t) * 0.35
+        raw_wave = (s1 + s2 + s3 + h1) * 0.35
 
         env = self._adsr_envelope(len(t), duration_sec, attack, decay, sustain, release)
         return (raw_wave * env * velocity).astype(np.float32)
+
+    def _render_guitar(self, freq: float, duration_sec: float, velocity: float) -> np.ndarray:
+        """Acoustic Plucked Guitar: Bright transient with natural string dampening."""
+        total_time = max(duration_sec + 0.3, 2.2)
+        n = int(total_time * self.sample_rate)
+        t = np.linspace(0, total_time, n, endpoint=False, dtype=np.float32)
+
+        # Fast pluck noise transient
+        p_len = min(n, int(0.01 * self.sample_rate))
+        pluck = np.zeros(n, dtype=np.float32)
+        if p_len > 0:
+            pluck[:p_len] = np.random.uniform(-1.0, 1.0, p_len).astype(np.float32) * np.exp(-np.linspace(0, 10, p_len)) * 0.35
+
+        f1 = np.sin(2 * np.pi * freq * t) * np.exp(-t * 2.2)
+        f2 = np.sin(2 * np.pi * (freq * 2.0) * t) * np.exp(-t * 4.5) * 0.4
+        f3 = np.sin(2 * np.pi * (freq * 3.0) * t) * np.exp(-t * 7.5) * 0.2
+        string_wave = (f1 + f2 + f3) * 0.65
+
+        composite = pluck + string_wave
+        gate_samples = int(duration_sec * self.sample_rate)
+        if gate_samples < n:
+            rel_t = np.linspace(0, 1.0, n - gate_samples, endpoint=False, dtype=np.float32)
+            composite[gate_samples:] *= np.exp(-rel_t * 6.0)
+
+        return (composite * velocity * 0.75).astype(np.float32)
 
     def _render_percussion(self, pitch: int, duration_sec: float, velocity: float) -> np.ndarray:
         """Procedural drum synthesis: Kick (pitch 36), Snare (pitch 38), Hi-Hat (pitch 42/46), Clap (pitch 39)."""

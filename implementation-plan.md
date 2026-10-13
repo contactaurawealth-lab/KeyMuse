@@ -1095,8 +1095,46 @@ Phase 3 bridges the autonomous AI composition engine (Phase 2) and browser-based
   - `git push origin main`
 - **Test Results**: All 94 automated tests passed. Production build and live deployment 100% operational.
 - **Status**: COMPLETED
-- **Next Step**: Phase 3 100% Complete
-- **Confirmation of 50-second Wait**: N/A (Rule 5: Do not wait after the final step)
+
+### Step 9 — Physical Acoustic Modeling & Instrument Sound Engine Overhaul
+- **Objectives**: Replace synthetic, sterile buzzer sounds with authentic physics-informed acoustic instrument models across both frontend Web Audio (`SampleEngine.ts`) and backend Python DSP (`keymuse/core/synth.py`), specifically addressing piano and acoustic instrument fidelity:
+  - Concert Grand Piano physical modeling:
+    - 16ms mechanical felt-on-steel hammer strike transient impulse buffer (`AudioBufferSourceNode` in browser, shaped impulse in Python).
+    - Dynamic acoustic lowpass filter sweep: strikes bright (`freq * (3.8 + vel * 3.0)`), rapidly dampening to warm singing resonance within 160ms.
+    - 3-string unison chorus beating (fundamental center + dual detuned strings at ±1.4 cents).
+    - 8 inharmonic string partials ($f_k = k \cdot f \cdot \sqrt{1 + B k^2}$) with independent exponential damping ($\alpha_k = \alpha_0 \cdot k^{1.35}$).
+    - Pitch-dependent natural string decay (bass strings sustain up to 5.5s, treble notes decay in ~1.2s).
+    - Spruce soundboard acoustic cabinet resonance (210 Hz).
+    - Felt damper decay on key release.
+  - Electric Piano (Rhodes): metallic tine bell chime transient + warm sine body + chorus tremolo.
+  - Tonewheel Organ: fluted drawbar sine combination (8', 4', 2 2/3', 2') + Leslie rotary speaker chorus beating.
+  - Plucked Acoustic Guitar: snappy nylon/steel pick transient + dual detuned strings + body cabinet resonance.
+  - Orchestral Violin & Strings: dual detuned ensemble string pair (sawtooth + triangle) + formant body resonance (500 Hz & 2.4 kHz) + delayed expressive vibrato.
+  - Flute & Marimba: breath turbulence + woody percussive resonator envelope.
+- **Completed Work**:
+  - Rewrote `buildPianoVoice` in `frontend/src/audio/SampleEngine.ts` with hammer buffer transient, dynamic biquad filter sweep, 3-string unison beating, and inharmonic partial decays.
+  - Upgraded Rhodes, Organ, Guitar, Violin, Flute, and Marimba voices in `frontend/src/audio/SampleEngine.ts`.
+  - Implemented `_render_piano` in `keymuse/core/synth.py` with physical hammer impulse, 8 inharmonic partials with frequency-dependent decay, unison chorus beating, and soundboard cabinet resonance.
+  - Enhanced `_render_pad`, `_render_bass`, `_render_lead`, `_render_strings`, and `_render_guitar` in `keymuse/core/synth.py`.
+  - Verified all 40/40 Python backend tests pass in 18.9s.
+  - Verified all 54/54 Vitest frontend tests pass in 40.5s.
+  - Production build compiled with zero errors (345 kB JS).
+  - Deployed updated engine to Vercel production at `https://keymuse-agent.vercel.app`.
+- **Files Changed**:
+  - `keymuse/core/synth.py`
+  - `frontend/src/audio/SampleEngine.ts`
+  - `implementation-plan.md`
+  - `README.md`
+  - `agent.md`
+  - `feature.md`
+- **Commands Executed**:
+  - `pytest tests/ backend/tests/` (40 passed)
+  - `npm --prefix frontend test` (54 passed across 14 test files)
+  - `npm --prefix frontend run build` (tsc & vite build succeeded)
+  - `vercel deploy --prod --yes`
+- **Test Results**: All 94/94 automated tests passed across Python and Vitest. Live deployment updated.
+- **Status**: COMPLETED
+
 
 
 

@@ -215,7 +215,7 @@ KeyMuse also features a full-featured browser-based musical instrument studio:
 - **Physical Keyboard Engine**: Maps `A–Z`, `0–9`, symbols, spacebar, arrows with repeat filtering and stuck-note protection.
 - **Shift Layers**: Diatonic base layer and accidental/harmony Shift layer with mobile touch controls.
 - **25-Key Virtual Piano & MPC Pads**: Multi-touch polyphony with velocity response.
-- **12 Instrument Sound Models**: Acoustic Piano, Rhodes, Organ, Synth Lead, Synth Bass, Pad, Strings, Guitar, Violin, Flute, Marimba, Drums.
+- **12 Instrument Sound Models with Physical Acoustic Modeling**: Concert Grand Piano (16ms hammer transient impulse, dynamic lowpass decay sweep, 3-string unison beating, 8 inharmonic string partials, pitch-dependent decay, soundboard resonance), Rhodes Electric Piano (tine bell + chorus), Tonewheel Organ (drawbars + Leslie rotary chorus), Synth Lead, Analog Bass, Atmospheric Pad, Orchestral Strings (dual ensemble detuning + dual formants + delayed vibrato), Acoustic Guitar (pluck transient + dual strings), Violin, Flute, Marimba, and Drums.
 - **Musical Intelligence**: 9 musical scales, scale lock quantization, 1-finger chords, arpeggiator.
 - **16-Step Drum Machine**: 7 procedural voices with swing and genre presets.
 - **Mixer & DSP Effects Rack**: Convolution reverb, stereo delay, biquad filter, distortion, and master limiter at -2.0 dBFS.

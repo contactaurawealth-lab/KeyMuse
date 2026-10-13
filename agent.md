@@ -227,4 +227,38 @@ keymuse/
    - Live URL: `https://keymuse-agent.vercel.app`
    - Entrypoint: `api/index.py` with `/tmp` sandboxing (`/tmp/keymuse_output`).
 
+---
+
+## 10. Physical Acoustic Modeling & Instrument Synthesis Architecture
+
+KeyMuse replaces flat, buzzy synth waveforms with physical acoustic modeling across both the browser Web Audio client (`SampleEngine.ts`) and the backend DSP engine (`synth.py`):
+
+### 10.1 Concert Grand Piano Physical Model
+Real acoustic pianos differ fundamentally from electronic synthesizers in six acoustic behaviors:
+1. **Felt-on-Steel Hammer Impact Transient**:
+   - *Acoustic principle*: The initial 5–16ms mechanical shock of the felt hammer striking steel strings produces a high-energy, broad-spectrum percussive burst.
+   - *Implementation*: Procedural hammer buffer transient (`AudioBufferSourceNode` with lowpass-shaped noise burst in browser; windowed transient impulse in Python).
+2. **Dynamic Brightness Damping (Filter Sweep)**:
+   - *Acoustic principle*: High-frequency harmonics dissipate far faster than low-frequency fundamentals due to internal string friction and soundboard impedance.
+   - *Implementation*: Biquad lowpass filter sweeps from strike brightness (`freq * (3.8 + vel * 3.0)`) down to warm singing resonance within 160ms.
+3. **3-String Unison Beating (Chorus)**:
+   - *Acoustic principle*: Mid and treble keys strike a trichord of 3 strings, which are slightly detuned (±1.0–1.8 cents), creating subtle acoustic beating.
+   - *Implementation*: Triple-string detuned oscillator cluster (center +1.4c and -1.4c detuning).
+4. **Inharmonic String Partials**:
+   - *Acoustic principle*: String stiffness causes higher overtones to shift sharp according to the inharmonicity formula $f_k = k \cdot f \cdot \sqrt{1 + B k^2}$, with frequency-dependent decay ($\alpha_k = \alpha_0 \cdot k^{1.35}$).
+   - *Implementation*: 8-partial inharmonic summation with independent exponential envelopes in Python; 4-partial summation in Web Audio.
+5. **Pitch-Dependent Decay Time**:
+   - *Acoustic principle*: Heavy bass strings vibrate for up to 5–7 seconds, whereas short treble strings damp out in under 1.5 seconds.
+   - *Implementation*: Exponential decay time scaling: $T_{decay} = 1.0 + 3.8 \cdot \exp(-f / 350)$.
+6. **Spruce Soundboard Cabinet Resonance**:
+   - *Acoustic principle*: The piano's spruce soundboard amplifies warm body resonances around 200–220 Hz.
+   - *Implementation*: Peaking body resonance filter at 210 Hz with +2.8 dB gain.
+
+### 10.2 Other Acoustic & Vintage Instruments
+- **Rhodes Electric Piano**: Metallic tine chime transient + dual sine body + stereo tremolo/chorus.
+- **Tonewheel Organ**: Fluted drawbar sine organ chords (8', 4', 2 2/3', 2') + simulated Leslie rotating speaker phase chorus.
+- **Acoustic Guitar**: Fast pluck transient + dual detuned strings + body cabinet resonance.
+- **Orchestral Violin & Strings**: Dual detuned string ensemble + dual formant body filters (500 Hz & 2400 Hz) + delayed vibrato.
+- **Flute & Marimba**: Breathy turbulence + soft sinusoidal core / woody percussive resonator envelope.
+
 
