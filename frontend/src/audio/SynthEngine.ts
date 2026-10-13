@@ -144,12 +144,18 @@ export class SynthEngine {
    * Immediately stops and cleans up all active voices (panic/focus loss)
    */
   public stopAllNotes() {
-    if (!this.audioEngine.ctx) return;
-    const now = this.audioEngine.ctx.currentTime;
-
-    this.activeVoices.forEach((voice, id) => {
-      this.releaseVoice(voice, id, now, 0.01);
+    this.activeVoices.forEach((voice) => {
+      try {
+        voice.osc.stop();
+        if (voice.lfo) voice.lfo.stop();
+        voice.osc.disconnect();
+        voice.filter.disconnect();
+        voice.gain.disconnect();
+      } catch (e) {
+        // Voice might already be disconnected
+      }
     });
+    this.activeVoices.clear();
   }
 
   private releaseVoice(voice: ActiveVoice, id: string, now: number, releaseTime: number) {
@@ -182,15 +188,29 @@ export class SynthEngine {
     let earliestTime = Infinity;
 
     this.activeVoices.forEach((voice, id) => {
-      if (!voice.released && voice.startTime < earliestTime) {
+      if (voice.startTime < earliestTime) {
         earliestTime = voice.startTime;
         oldestVoice = voice;
         oldestId = id;
       }
     });
 
-    if (oldestVoice && this.audioEngine.ctx) {
-      this.releaseVoice(oldestVoice, oldestId, this.audioEngine.ctx.currentTime, 0.008);
+    if (oldestVoice && oldestId) {
+      try {
+        const v: ActiveVoice = oldestVoice;
+        v.osc.stop();
+        if (v.lfo) v.lfo.stop();
+        v.osc.disconnect();
+        v.filter.disconnect();
+        v.gain.disconnect();
+      } catch (e) {
+        // Voice might already be disconnected
+      }
+      this.activeVoices.delete(oldestId);
     }
+  }
+
+  public getActiveVoiceCount(): number {
+    return this.activeVoices.size;
   }
 }

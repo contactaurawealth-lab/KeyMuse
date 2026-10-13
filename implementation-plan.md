@@ -394,9 +394,31 @@ KeyMuse is developed across 17 structured phases. After completing each phase, a
 
 ## Phase 15 — Comprehensive QA
 - **Objectives**: Run automated test suites (frontend Vitest + backend Pytest), verify keyboard mappings, touch events, audio export, MIDI export, and edge cases.
-- **Status**: PENDING
+- **Changes Made**:
+  - Implemented `EdgeCases.test.ts` testing edge cases:
+    - Extreme octave offsets (+/-3) and transpose semitones (+/-12) verifying safe finite frequency calculation.
+    - 32-voice polyphony ceiling under heavy note overload: oldest-voice stealing guarantees voice count never exceeds 32.
+    - Panic button `stopAllNotes`: immediately stops oscillators, disconnects audio graph nodes, and clears active voice map.
+    - Scale quantization boundary testing across natural major and chromatic intervals.
+    - Short burst audio buffer encoding validating RIFF/WAVE header chunk integrity.
+  - Hardened `SynthEngine.ts`:
+    - Updated `stealOldestVoice` to immediately stop, disconnect, and delete stolen voices from the active map.
+    - Updated `stopAllNotes` to immediately terminate all active oscillators and clear voice state on Panic.
+  - Executed full Vitest suite: 44 tests passed across all 12 test files.
+  - Executed full Pytest suite: 3 tests passed across 2 test files in 3.27s.
+  - Total automated tests passing: 47/47 tests.
+- **Files Changed**:
+  - `frontend/src/audio/EdgeCases.test.ts`
+  - `frontend/src/audio/SynthEngine.ts`
+- **Commands Executed**:
+  - `npx vitest run` (44 tests passed in 12 test files)
+  - `/root/keymuse/backend/venv/bin/pytest /root/keymuse/backend/tests -v` (3 tests passed)
+  - `npx tsc --noEmit` (0 errors)
+- **Test Results**: All 47 automated tests passed across frontend and backend. Zero defects.
+- **Known Defects**: None.
+- **Status**: COMPLETED
 - **Next Phase**: Phase 16 — Performance and UX Polish
-- **50-second Wait**: Scheduled
+- **Confirmation of 50-second Wait**: Scheduled upon completion of Phase 15 verification.
 
 ---
 
