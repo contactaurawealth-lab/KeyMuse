@@ -125,8 +125,56 @@ keymuse/
 
 ---
 
+---
+
 ## 7. Phase Orchestration Rules
 - Sequential execution from Phase 1 through Phase 17.
 - Automatically wait 50 seconds (`await new Promise(...)` / system sleep) between consecutive phases.
 - Perform automated verification, file inspections, and update `implementation-plan.md` and `feature.md`.
 - Never stop after planning; complete all phases through final delivery.
+
+---
+
+## 8. Phase 2 — AI Music Autopilot Architecture Specification
+
+### 8.1 Modular Core Architecture
+1. **Music Brief Interpreter** (`keymuse.autopilot.interpreter`):
+   - Ingests natural language briefs (e.g. "60-second cinematic sci-fi in D minor at 90 BPM").
+   - Extracts structured parameters (`MusicBrief`): genre, mood, duration, BPM, key, mode, instrumentation, structure, explicit constraints.
+   - Includes robust rule-based deterministic parser with optional LLM provider adapter.
+
+2. **Composition Planner** (`keymuse.autopilot.planner`):
+   - Computes bar/beat alignment based on target duration and BPM.
+   - Plans musical sections (intro, tension build, climax, resolution) with energy curves (0.0 - 1.0).
+   - Assigns tracks, roles (pad, bass, lead, percussion), registers, polyphony limits, and transitions.
+
+3. **Composition & Arrangement Engine** (`keymuse.autopilot.generator`):
+   - Realizes the plan into a canonical `KeyMuseProject`.
+   - Generates chord progressions aligned to mode/key.
+   - Generates motifs, rhythmic basslines, arpeggios, and multi-track percussion patterns.
+
+4. **Pure Python Audio Synthesis & Rendering** (`keymuse.core.synth`, `keymuse.core.render`):
+   - Real DSP synthesis engine utilizing `numpy` for high performance.
+   - Wavetable/analog oscillators (sine, square, saw, triangle), ADSR volume envelopes with click-free ramps.
+   - Procedural drum synthesis (kick, snare, hats, tom, perc).
+   - Stereo panning, master limiter, and 16-bit PCM WAV rendering via Python `wave` + `numpy`.
+   - Standard MIDI File (SMF Type 0/1) binary generator (`keymuse.core.midi`).
+
+5. **Audio & Music Quality Inspector** (`keymuse.core.analyzer`):
+   - Inspects rendered audio waveforms: duration, sample rate, channels, peak amplitude, RMS level, clipping risk.
+   - Detects leading/trailing/unexpected silence and gaps.
+   - Measures track and note coverage, pitch boundaries, and section alignment.
+
+6. **Targeted Revision Loop** (`keymuse.autopilot.reviser`):
+   - Closed-loop optimization: detects actionable defects from analysis results.
+   - Generates targeted edits (e.g. gain adjustment for clipping, note extension for duration mismatch, tail decay for cutoffs).
+   - Re-renders audio and verifies improvement with revision history tracking.
+
+7. **Task Orchestrator & Safe Agent API** (`keymuse.autopilot.orchestrator`, `keymuse.autopilot.autopilot`):
+   - Manages asynchronous tasks with states (queued, running, completed, failed, cancelled).
+   - Exposes clean high-level API: `from keymuse import MusicAutopilot`.
+
+8. **Model Context Protocol (MCP) Server** (`keymuse.mcp.server`):
+   - Implements official MCP SDK (`mcp>=2.3.0`) tool server.
+   - Exposes safe, validated tools for AI coding agents (`keymuse_plan_composition`, `keymuse_render_preview`, `keymuse_analyze_audio`, `keymuse_revise_project`, etc.).
+
