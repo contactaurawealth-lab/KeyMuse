@@ -110,3 +110,33 @@ def test_autopilot_interpret_nlp():
     assert "orchestral_strings" in b["instruments"]
     assert b["genre"] == "ambient"
 
+
+def test_autopilot_parse_brief_alias():
+    res = client.post("/api/autopilot/parse-brief", json={"text": "compose a 45 second lofi chillhop track in Eb major at 82 bpm without drums"})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "success"
+    b = data["brief"]
+    assert b["duration_seconds"] == 45.0
+    assert b["tempo"] == 82.0
+    assert b["key"] == "Eb"
+    assert b["mode"] == "major"
+    assert "percussion" not in b["instruments"]
+
+
+def test_autopilot_compose_direct_nlp():
+    # Test that a natural language prompt with custom tempo and key is directly honored
+    res = client.post("/api/autopilot/compose", json={
+        "brief": "A 30-second acoustic guitar piece in E major at 85 bpm",
+        "seed": 123
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "success"
+    assert data["bpm"] == 85.0
+    assert data["key"] == "E"
+    assert data["mode"] == "major"
+    inst_names = [t["instrument"] for t in data["tracks"]]
+    assert "guitar" in inst_names
+
+

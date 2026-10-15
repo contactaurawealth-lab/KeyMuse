@@ -26,14 +26,6 @@ class InterpretRequest(BaseModel):
     brief: Optional[str] = Field(None, description="Natural language composition description to interpret")
     text: Optional[str] = Field(None, description="Alias for brief")
 
-    @model_validator(mode="after")
-    def resolve_brief(self) -> "InterpretRequest":
-        if not self.brief and self.text:
-            self.brief = self.text
-        elif not self.brief and not self.text:
-            self.brief = "Create a musical piece"
-        return self
-
 
 class ComposeRequest(BaseModel):
     brief: str = Field(..., description="Natural language composition description")
@@ -194,10 +186,12 @@ async def get_mcp_tools() -> Dict[str, Any]:
 
 
 @router.post("/interpret")
+@router.post("/parse-brief")
 def interpret_brief(request: InterpretRequest) -> Dict[str, Any]:
     """Interprets a natural-language composition brief and extracts structured parameters."""
+    brief_text = request.brief or request.text or "Create a musical piece"
     interpreter = MusicBriefInterpreter()
-    brief = interpreter.interpret(request.brief)
+    brief = interpreter.interpret(brief_text)
     return {
         "status": "success",
         "brief": {
