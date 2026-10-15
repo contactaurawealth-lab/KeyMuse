@@ -149,6 +149,269 @@ export const FEATURED_SOOTHING_TUNE: CompositionResult = {
   project_json_url: '/audio/soothing_tune_60s.json'
 };
 
+export const AVAILABLE_INSTRUMENTS = [
+  { id: 'piano', label: 'Acoustic Grand Piano' },
+  { id: 'orchestral_strings', label: 'Orchestral Strings' },
+  { id: 'electric_piano', label: 'Rhodes Keys' },
+  { id: 'atmospheric_pad', label: 'Atmospheric Pad' },
+  { id: 'guitar', label: 'Acoustic Guitar' },
+  { id: 'flute', label: 'Concert Flute' },
+  { id: 'marimba', label: 'Warm Marimba' },
+  { id: 'organ', label: 'Drawbar Organ' },
+  { id: 'bass_pulse', label: 'Bass Pulse' },
+  { id: 'lead_melody', label: 'Lead Synth' },
+  { id: 'percussion', label: 'Percussion / Drums' },
+  { id: 'arpeggio_synth', label: 'Arp Synth' }
+];
+
+export const AVAILABLE_INSTRUMENT_MAP: Record<string, string> = AVAILABLE_INSTRUMENTS.reduce(
+  (acc, item) => ({ ...acc, [item.id]: item.label }),
+  {}
+);
+
+export interface ExtractedBrief {
+  tempo: number;
+  key: string;
+  mode: string;
+  duration: number;
+  instruments: string[];
+  genre: string;
+  mood: string;
+  summary: string;
+}
+
+export function parseBriefNlp(text: string): ExtractedBrief {
+  if (!text || !text.trim()) {
+    return {
+      tempo: 90,
+      key: 'C',
+      mode: 'major',
+      duration: 60,
+      instruments: ['piano', 'atmospheric_pad', 'orchestral_strings'],
+      genre: 'Cinematic',
+      mood: 'Ambient, Melodic',
+      summary: 'C Major • 90 BPM • 60s'
+    };
+  }
+
+  const lower = text.toLowerCase();
+
+  // Negative constraints check
+  const bannedInstruments: string[] = [];
+  if (/\b(?:without|no|exclude|omit)\s+(?:drums?|percussion|beats?|grooves?)\b/.test(lower) || /\bno drums\b/.test(lower)) {
+    bannedInstruments.push('percussion');
+  }
+  if (/\b(?:without|no|exclude|omit)\s+(?:bass|basslines?|sub)\b/.test(lower)) {
+    bannedInstruments.push('bass_pulse');
+  }
+  if (/\b(?:without|no|exclude|omit)\s+(?:synths?|pads?)\b/.test(lower) || /\bacoustic only\b/.test(lower)) {
+    bannedInstruments.push('atmospheric_pad');
+  }
+
+  // Text with negative phrases removed for positive instrument matching
+  let positiveText = lower
+    .replace(/\b(?:without|no|exclude|omit)\s+(?:drums?|percussion|beats?|grooves?)\b/g, ' ')
+    .replace(/\b(?:without|no|exclude|omit)\s+(?:bass|basslines?|sub)\b/g, ' ')
+    .replace(/\bno drums\b/g, ' ');
+
+  // 1. Duration Extraction
+  let duration = 60;
+  const secMatch = lower.match(/(\d+)\s*(?:-|–|\s)?(?:sec|secs|second|seconds|s)\b/);
+  const minMatch = lower.match(/(\d+)\s*(?:-|–|\s)?(?:min|mins|minute|minutes|m)\b/);
+  const loneNumberMatch = lower.match(/(?:a|an|one|make|compose)?\s*(\d{2,3})\s*(?:sec|second|s)?\s*(?:[a-z]+\s+)?(?:tune|track|song|piece|lullaby|beat|composition)/);
+
+  if (secMatch) {
+    duration = Math.max(5, Math.min(300, parseInt(secMatch[1], 10)));
+  } else if (minMatch) {
+    duration = Math.max(5, Math.min(300, parseInt(minMatch[1], 10) * 60));
+  } else if (loneNumberMatch) {
+    duration = Math.max(5, Math.min(300, parseInt(loneNumberMatch[1], 10)));
+  } else if (/\btwo min(?:ute)?s?\b/.test(lower)) {
+    duration = 120;
+  } else if (/\bthree min(?:ute)?s?\b/.test(lower)) {
+    duration = 180;
+  } else if (/\b(half a minute|thirty seconds)\b/.test(lower)) {
+    duration = 30;
+  } else if (/\b(one minute|a minute)\b/.test(lower)) {
+    duration = 60;
+  } else if (lower.includes('short') || lower.includes('quick')) {
+    duration = 30;
+  } else if (lower.includes('epic') || lower.includes('extended') || lower.includes('long')) {
+    duration = 90;
+  }
+
+  // 2. Tempo Extraction
+  let tempo = 90;
+  const bpmExplicit = lower.match(/(?:at|around|tempo(?:\s+of)?)\s+(\d{2,3})/) || lower.match(/(\d{2,3})\s*(?:bpm|beats per minute)/);
+  if (bpmExplicit) {
+    tempo = Math.max(40, Math.min(240, parseInt(bpmExplicit[1], 10)));
+  } else if (lower.includes('drum and bass') || lower.includes('dnb')) {
+    tempo = 172;
+  } else if (lower.includes('soothing') || lower.includes('lullaby') || lower.includes('gentle') || lower.includes('sleep') || lower.includes('slow')) {
+    tempo = 70;
+  } else if (lower.includes('lofi') || lower.includes('chill') || lower.includes('relaxing') || lower.includes('calm')) {
+    tempo = 82;
+  } else if (lower.includes('ambient') || lower.includes('meditative')) {
+    tempo = 65;
+  } else if (lower.includes('ballad')) {
+    tempo = 75;
+  } else if (lower.includes('upbeat') || lower.includes('dance') || lower.includes('pop')) {
+    tempo = 120;
+  } else if (lower.includes('cyberpunk') || lower.includes('chase') || lower.includes('action') || lower.includes('battle')) {
+    tempo = 128;
+  } else if (lower.includes('techno') || lower.includes('trance') || lower.includes('fast')) {
+    tempo = 135;
+  } else if (lower.includes('epic') || lower.includes('orchestral') || lower.includes('cinematic')) {
+    tempo = 105;
+  }
+
+  // 3. Key & Mode Extraction
+  let key = 'C';
+  let mode = 'major';
+
+  const keyModeMatch = lower.match(/\b([a-g](?:#|b)?)\s+(major|minor|dorian|phrygian|mixolydian|lydian)\b/);
+  const accidentalSpelled = lower.match(/\b([a-g])\s+(sharp|flat)\s+(major|minor|dorian|phrygian|mixolydian|lydian)\b/);
+  const abbrevMatch = lower.match(/\b([a-g](?:#|b)?)(maj|min|m)\b/);
+  const keyOnlyMatch = lower.match(/\b(?:in key of|in the key of|key of|in)\s+([a-g](?:#|b)?)\b/);
+
+  if (keyModeMatch) {
+    key = keyModeMatch[1].toUpperCase();
+    if (key.length === 2 && key[1] === 'B') key = key[0] + 'b';
+    mode = keyModeMatch[2];
+  } else if (accidentalSpelled) {
+    const root = accidentalSpelled[1].toUpperCase();
+    const acc = accidentalSpelled[2] === 'sharp' ? '#' : 'b';
+    key = root + acc;
+    mode = accidentalSpelled[3];
+  } else if (abbrevMatch) {
+    key = abbrevMatch[1].toUpperCase();
+    if (key.length === 2 && key[1] === 'B') key = key[0] + 'b';
+    mode = abbrevMatch[2] === 'maj' ? 'major' : 'minor';
+  } else {
+    // Mode sentiment
+    if (
+      lower.includes('soothing') ||
+      lower.includes('peaceful') ||
+      lower.includes('happy') ||
+      lower.includes('bright') ||
+      lower.includes('warm') ||
+      lower.includes('gentle') ||
+      lower.includes('lullaby') ||
+      lower.includes('uplifting')
+    ) {
+      mode = 'major';
+    } else if (
+      lower.includes('dark') ||
+      lower.includes('mysterious') ||
+      lower.includes('tense') ||
+      lower.includes('cyberpunk') ||
+      lower.includes('sad') ||
+      lower.includes('melancholy') ||
+      lower.includes('chase') ||
+      lower.includes('battle')
+    ) {
+      mode = 'minor';
+    }
+
+    if (keyOnlyMatch) {
+      key = keyOnlyMatch[1].toUpperCase();
+      if (key.length === 2 && key[1] === 'B') key = key[0] + 'b';
+    } else {
+      key = mode === 'major' ? 'C' : 'D';
+    }
+  }
+
+  // 4. Instrument Extraction
+  const detectedInstruments: string[] = [];
+  if (positiveText.includes('piano') || positiveText.includes('grand piano') || positiveText.includes('felt')) detectedInstruments.push('piano');
+  if (positiveText.includes('rhodes') || positiveText.includes('electric piano') || positiveText.includes('tine')) detectedInstruments.push('electric_piano');
+  if (positiveText.includes('organ')) detectedInstruments.push('organ');
+  if (positiveText.includes('guitar') || positiveText.includes('acoustic guitar') || positiveText.includes('fingerpicking')) detectedInstruments.push('guitar');
+  if (positiveText.includes('string') || positiveText.includes('violin') || positiveText.includes('cello') || positiveText.includes('orchestral') || positiveText.includes('quartet')) detectedInstruments.push('orchestral_strings');
+  if (positiveText.includes('flute') || positiveText.includes('woodwind')) detectedInstruments.push('flute');
+  if (positiveText.includes('marimba') || positiveText.includes('vibraphone') || positiveText.includes('xylophone')) detectedInstruments.push('marimba');
+  if (positiveText.includes('pad') || positiveText.includes('ambient') || positiveText.includes('lush') || positiveText.includes('wash')) detectedInstruments.push('atmospheric_pad');
+  if (positiveText.includes('bass') || positiveText.includes('sub') || positiveText.includes('pulse')) detectedInstruments.push('bass_pulse');
+  
+  // Guard against "upbeat" containing "beat"
+  const positiveNoUpbeat = positiveText.replace(/\bupbeat\b/g, ' ');
+  if (/\b(?:percussion|drums?|beats?|grooves?|rhythms?|snare|kick|hi-?hats?)\b/.test(positiveNoUpbeat)) {
+    detectedInstruments.push('percussion');
+  }
+
+  if (positiveText.includes('lead') || positiveText.includes('melody') || positiveText.includes('solo') || positiveText.includes('hook')) detectedInstruments.push('lead_melody');
+  if (positiveText.includes('arp') || positiveText.includes('arpeggio')) detectedInstruments.push('lead_melody');
+
+  // Filter out banned
+  const filteredInstruments = detectedInstruments.filter((i) => !bannedInstruments.includes(i));
+
+  // Intelligent ensemble completion
+  if (filteredInstruments.length === 0) {
+    if (lower.includes('soothing') || lower.includes('lullaby') || lower.includes('peaceful') || lower.includes('relaxing')) {
+      filteredInstruments.push('piano', 'atmospheric_pad', 'orchestral_strings');
+    } else if (lower.includes('cyberpunk') || lower.includes('electronic') || lower.includes('chase')) {
+      filteredInstruments.push('bass_pulse', 'percussion', 'lead_melody', 'atmospheric_pad');
+    } else if (lower.includes('lofi')) {
+      filteredInstruments.push('piano', 'bass_pulse', 'percussion', 'atmospheric_pad');
+    } else if (lower.includes('orchestral') || lower.includes('cello') || lower.includes('chamber')) {
+      filteredInstruments.push('orchestral_strings', 'piano', 'atmospheric_pad');
+    } else if (lower.includes('pop')) {
+      filteredInstruments.push('piano', 'bass_pulse', 'percussion', 'lead_melody');
+    } else {
+      filteredInstruments.push('atmospheric_pad', 'bass_pulse', 'percussion', 'lead_melody');
+    }
+  } else if (filteredInstruments.length < 3) {
+    if (filteredInstruments.includes('piano')) {
+      if (!filteredInstruments.includes('atmospheric_pad') && !bannedInstruments.includes('atmospheric_pad')) filteredInstruments.push('atmospheric_pad');
+      if (!filteredInstruments.includes('orchestral_strings') && !bannedInstruments.includes('orchestral_strings')) filteredInstruments.push('orchestral_strings');
+    } else if (filteredInstruments.includes('guitar')) {
+      if (!filteredInstruments.includes('atmospheric_pad') && !bannedInstruments.includes('atmospheric_pad')) filteredInstruments.push('atmospheric_pad');
+      if (!filteredInstruments.includes('bass_pulse') && !bannedInstruments.includes('bass_pulse')) filteredInstruments.push('bass_pulse');
+    } else if (filteredInstruments.includes('orchestral_strings')) {
+      if (!filteredInstruments.includes('piano') && !bannedInstruments.includes('piano')) filteredInstruments.push('piano');
+      if (!filteredInstruments.includes('atmospheric_pad') && !bannedInstruments.includes('atmospheric_pad')) filteredInstruments.push('atmospheric_pad');
+    }
+  }
+
+  const finalInstruments = filteredInstruments.filter((i) => !bannedInstruments.includes(i));
+
+  // 5. Genre & Mood Extraction
+  let genre = 'Cinematic';
+  let mood = 'Balanced, Dynamic';
+  if (lower.includes('soothing') || lower.includes('lullaby') || lower.includes('peaceful')) {
+    genre = 'Ambient';
+    mood = 'Peaceful, Gentle, Soothing';
+  } else if (lower.includes('lofi') || lower.includes('chill')) {
+    genre = 'Lofi Hip-Hop';
+    mood = 'Mellow, Nostalgic, Relaxed';
+  } else if (lower.includes('cyberpunk') || lower.includes('techno') || lower.includes('synthwave')) {
+    genre = 'Electronic';
+    mood = 'High-Energy, Futuristic, Driving';
+  } else if (lower.includes('orchestral') || lower.includes('classical') || lower.includes('cello') || lower.includes('chamber')) {
+    genre = 'Orchestral';
+    mood = lower.includes('sad') ? 'Sad, Melancholic, Expressive' : 'Dramatic, Majestic, Expressive';
+  } else if (lower.includes('pop')) {
+    genre = 'Pop';
+    mood = lower.includes('happy') ? 'Happy, Upbeat, Joyful' : 'Upbeat, Catchy, Driving';
+  } else if (lower.includes('ambient')) {
+    genre = 'Ambient';
+    mood = 'Serene, Meditative, Atmospheric';
+  }
+
+  const summary = `${key} ${mode.charAt(0).toUpperCase() + mode.slice(1)} • ${tempo} BPM • ${duration}s • ${genre} (${mood})`;
+
+  return {
+    tempo,
+    key,
+    mode,
+    duration,
+    instruments: finalInstruments,
+    genre,
+    mood,
+    summary
+  };
+}
+
 export const AiStudio: React.FC = () => {
   // Input parameters
   const [briefText, setBriefText] = useState(PRESET_BRIEFS[0].prompt);
@@ -163,6 +426,11 @@ export const AiStudio: React.FC = () => {
     'percussion',
     'lead_melody'
   ]);
+
+  // NLP Intelligence State
+  const [autoSyncNlp, setAutoSyncNlp] = useState<boolean>(true);
+  const [nlpData, setNlpData] = useState<ExtractedBrief>(() => parseBriefNlp(PRESET_BRIEFS[0].prompt));
+  const [isInterpreting, setIsInterpreting] = useState<boolean>(false);
 
   // Execution state
   const [isComposing, setIsComposing] = useState(false);
@@ -183,6 +451,75 @@ export const AiStudio: React.FC = () => {
   const [gainAdjustmentDb, setGainAdjustmentDb] = useState(0.0);
   const [tempoAdjustment, setTempoAdjustment] = useState(0.0);
   const [revisionNote, setRevisionNote] = useState('');
+
+  // Automatic NLP interpretation effect
+  useEffect(() => {
+    const clientExtracted = parseBriefNlp(briefText);
+    setNlpData(clientExtracted);
+
+    if (autoSyncNlp) {
+      setTempo(clientExtracted.tempo);
+      setKeyRoot(clientExtracted.key);
+      setMode(clientExtracted.mode);
+      setTargetDuration(clientExtracted.duration);
+      if (clientExtracted.instruments.length > 0) {
+        setSelectedInstruments(clientExtracted.instruments);
+      }
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setIsInterpreting(true);
+        const res = await fetch('/api/autopilot/interpret', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brief: briefText })
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.brief) {
+            const b = json.brief;
+            setNlpData((prev) => ({
+              ...prev,
+              tempo: Math.round(b.tempo) || prev.tempo,
+              key: b.key || prev.key,
+              mode: b.mode || prev.mode,
+              duration: Math.round(b.duration_seconds) || prev.duration,
+              instruments: b.instruments && b.instruments.length > 0 ? b.instruments : prev.instruments,
+              genre: b.genre ? b.genre.charAt(0).toUpperCase() + b.genre.slice(1) : prev.genre,
+              mood: b.mood || prev.mood,
+              summary: b.summary || prev.summary
+            }));
+
+            if (autoSyncNlp) {
+              if (b.tempo) setTempo(Math.round(b.tempo));
+              if (b.key) setKeyRoot(b.key);
+              if (b.mode) setMode(b.mode);
+              if (b.duration_seconds) setTargetDuration(Math.round(b.duration_seconds));
+              if (b.instruments && b.instruments.length > 0) setSelectedInstruments(b.instruments);
+            }
+          }
+        }
+      } catch (err) {
+        // Fallback remains clientExtracted
+      } finally {
+        setIsInterpreting(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [briefText, autoSyncNlp]);
+
+  // Apply NLP to sliders manually
+  const applyNlpToControls = () => {
+    setTempo(nlpData.tempo);
+    setKeyRoot(nlpData.key);
+    setMode(nlpData.mode);
+    setTargetDuration(nlpData.duration);
+    if (nlpData.instruments.length > 0) {
+      setSelectedInstruments(nlpData.instruments);
+    }
+  };
 
   // Apply Preset
   const handleSelectPreset = (preset: typeof PRESET_BRIEFS[0]) => {
@@ -208,7 +545,7 @@ export const AiStudio: React.FC = () => {
   const handleCompose = async () => {
     setIsComposing(true);
     setErrorMsg(null);
-    setCompositionStage('Interpreting natural language brief...');
+    setCompositionStage('Interpreting natural language brief with KeyMuse NLP...');
 
     try {
       // Stage simulation indicators while server executes pure Python DSP
@@ -221,6 +558,7 @@ export const AiStudio: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           brief: briefText,
+          use_nlp: true,
           tempo,
           key: keyRoot,
           mode,
@@ -434,9 +772,27 @@ export const AiStudio: React.FC = () => {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '14px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Natural Language Music Brief
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  Natural Language Music Brief
+                </label>
+                <span
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(0, 210, 196, 0.15)',
+                    color: 'var(--accent-cyan)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <Sparkles size={11} />
+                  <span>NLP ACTIVE</span>
+                </span>
+              </div>
               <textarea
                 value={briefText}
                 onChange={(e) => setBriefText(e.target.value)}
@@ -454,6 +810,84 @@ export const AiStudio: React.FC = () => {
                 }}
                 placeholder="Describe your desired soundtrack, mood, tempo, instruments, and structure..."
               />
+
+              {/* Real-time NLP Intelligence Card */}
+              <div
+                style={{
+                  marginTop: '8px',
+                  padding: '10px 12px',
+                  backgroundColor: 'rgba(0, 210, 196, 0.06)',
+                  border: '1px solid rgba(0, 210, 196, 0.25)',
+                  borderRadius: 'var(--radius-sm)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Sparkles size={13} color="var(--accent-cyan)" />
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent-cyan)', letterSpacing: '0.04em' }}>
+                      NLP EXTRACTED PARAMETERS
+                    </span>
+                    {isInterpreting && <RefreshCw size={11} className="animate-spin" color="var(--accent-cyan)" />}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <label style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={autoSyncNlp}
+                        onChange={(e) => setAutoSyncNlp(e.target.checked)}
+                      />
+                      <span>Auto-sync controls</span>
+                    </label>
+                    {!autoSyncNlp && (
+                      <button
+                        type="button"
+                        onClick={applyNlpToControls}
+                        className="studio-btn"
+                        style={{ fontSize: '10px', padding: '2px 8px' }}
+                      >
+                        Apply to Sliders
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  <span style={{ padding: '3px 8px', borderRadius: '12px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', fontSize: '11px', color: 'var(--text-primary)' }}>
+                    Tonality: <strong style={{ color: 'var(--accent-cyan)' }}>{nlpData.key} {nlpData.mode}</strong>
+                  </span>
+                  <span style={{ padding: '3px 8px', borderRadius: '12px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', fontSize: '11px', color: 'var(--text-primary)' }}>
+                    Tempo: <strong style={{ color: 'var(--accent-cyan)' }}>{nlpData.tempo} BPM</strong>
+                  </span>
+                  <span style={{ padding: '3px 8px', borderRadius: '12px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', fontSize: '11px', color: 'var(--text-primary)' }}>
+                    Duration: <strong style={{ color: 'var(--accent-cyan)' }}>{nlpData.duration}s</strong>
+                  </span>
+                  <span style={{ padding: '3px 8px', borderRadius: '12px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', fontSize: '11px', color: 'var(--text-primary)' }}>
+                    Genre & Mood: <strong>{nlpData.genre}</strong> ({nlpData.mood})
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  <span>Detected Voices:</span>
+                  {nlpData.instruments.map((inst) => (
+                    <span
+                      key={inst}
+                      style={{
+                        padding: '1px 7px',
+                        borderRadius: '4px',
+                        backgroundColor: 'rgba(0, 210, 196, 0.15)',
+                        color: 'var(--accent-cyan)',
+                        fontSize: '10px',
+                        fontWeight: 700
+                      }}
+                    >
+                      {AVAILABLE_INSTRUMENT_MAP[inst] || inst}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Parameter Sliders & Selectors */}
@@ -565,14 +999,7 @@ export const AiStudio: React.FC = () => {
                 Active Track Voices ({selectedInstruments.length})
               </label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {[
-                  { id: 'atmospheric_pad', label: 'Atmospheric Pad' },
-                  { id: 'bass_pulse', label: 'Bass Pulse' },
-                  { id: 'lead_melody', label: 'Lead Melody' },
-                  { id: 'percussion', label: 'Percussion / Drums' },
-                  { id: 'electric_piano', label: 'Rhodes Keys' },
-                  { id: 'arpeggio_synth', label: 'Arp Synth' }
-                ].map((inst) => {
+                {AVAILABLE_INSTRUMENTS.map((inst) => {
                   const isSelected = selectedInstruments.includes(inst.id);
                   return (
                     <button

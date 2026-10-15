@@ -23,6 +23,7 @@ class InferredChoices(BaseModel):
     inferred_mode: bool = False
     inferred_structure: bool = False
     inferred_instruments: bool = False
+    inferred_duration: bool = False
     provider_used: str = "deterministic-rule-engine"
 
 

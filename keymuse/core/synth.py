@@ -67,9 +67,17 @@ class SynthEngine:
             return self._render_pad(freq, duration_sec, velocity)
         elif "bass" in instrument:
             return self._render_bass(freq, duration_sec, velocity)
+        elif "flute" in instrument or "woodwind" in instrument or "pipe" in instrument:
+            return self._render_flute(freq, duration_sec, velocity)
+        elif "marimba" in instrument or "xylophone" in instrument or "bell" in instrument:
+            return self._render_marimba(freq, duration_sec, velocity)
+        elif "electric_piano" in instrument or "rhodes" in instrument or "wurlitzer" in instrument:
+            return self._render_electric_piano(freq, duration_sec, velocity)
+        elif "organ" in instrument:
+            return self._render_organ(freq, duration_sec, velocity)
         elif "lead" in instrument:
             return self._render_lead(freq, duration_sec, velocity)
-        elif "string" in instrument or "violin" in instrument:
+        elif "string" in instrument or "violin" in instrument or "cello" in instrument:
             return self._render_strings(freq, duration_sec, velocity)
         elif "guitar" in instrument:
             return self._render_guitar(freq, duration_sec, velocity)
@@ -257,6 +265,104 @@ class SynthEngine:
             composite[gate_samples:] *= np.exp(-rel_t * 6.0)
 
         return (composite * velocity * 0.75).astype(np.float32)
+
+    def _render_flute(self, freq: float, duration_sec: float, velocity: float) -> np.ndarray:
+        """Acoustic Flute / Woodwind Model:
+        Soft breath onset, sine fundamental with gentle 2nd/3rd harmonics and 5.2Hz vibrato.
+        """
+        attack = 0.08
+        decay = 0.15
+        sustain = 0.85
+        release = 0.25
+        total_time = duration_sec + release
+        n = int(total_time * self.sample_rate)
+        t = np.linspace(0, total_time, n, endpoint=False, dtype=np.float32)
+
+        # 5.2 Hz acoustic vibrato
+        vibrato = 1.0 + 0.007 * np.sin(2 * np.pi * 5.2 * t)
+        phase = np.cumsum(2 * np.pi * (freq * vibrato) / self.sample_rate)
+
+        # Breath noise onset
+        breath_samples = min(n, int(0.06 * self.sample_rate))
+        breath = np.zeros(n, dtype=np.float32)
+        if breath_samples > 0:
+            breath[:breath_samples] = np.random.uniform(-0.15, 0.15, breath_samples).astype(np.float32)
+
+        # Harmonic spectrum: dominant fundamental, soft 2nd and 3rd harmonics
+        f1 = np.sin(phase)
+        f2 = np.sin(2 * phase) * 0.18
+        f3 = np.sin(3 * phase) * 0.06
+        tone = (f1 + f2 + f3) * 0.65 + breath
+
+        env = self._adsr_envelope(n, duration_sec, attack, decay, sustain, release)
+        return (tone * env * velocity * 0.8).astype(np.float32)
+
+    def _render_marimba(self, freq: float, duration_sec: float, velocity: float) -> np.ndarray:
+        """Acoustic Marimba / Wooden Mallet Model:
+        Sharp felt/rubber mallet strike transient with inharmonic wooden bar modes.
+        """
+        decay_time = max(0.4, min(2.5, duration_sec * 0.8))
+        total_time = duration_sec + 0.2
+        n = int(total_time * self.sample_rate)
+        t = np.linspace(0, total_time, n, endpoint=False, dtype=np.float32)
+
+        # Sharp wooden transient knock (8ms)
+        knock_samples = min(n, int(0.008 * self.sample_rate))
+        knock = np.zeros(n, dtype=np.float32)
+        if knock_samples > 0:
+            knock[:knock_samples] = np.random.uniform(-0.5, 0.5, knock_samples).astype(np.float32) * np.exp(-np.linspace(0, 8, knock_samples))
+
+        # Wooden bar modes (1x, 3.98x, 9.25x)
+        m1 = np.sin(2 * np.pi * freq * t) * np.exp(-t * 6.5)
+        m2 = np.sin(2 * np.pi * (freq * 3.98) * t) * np.exp(-t * 18.0) * 0.35
+        m3 = np.sin(2 * np.pi * (freq * 9.25) * t) * np.exp(-t * 35.0) * 0.12
+        bar = (m1 + m2 + m3) * 0.75 + knock * 0.25
+
+        return (bar * velocity * 0.85).astype(np.float32)
+
+    def _render_electric_piano(self, freq: float, duration_sec: float, velocity: float) -> np.ndarray:
+        """Classic Electric Piano (Rhodes / Tine) Model:
+        Metallic tine bell strike transient with warm dual-operator FM body and chorus.
+        """
+        release = 0.35
+        total_time = duration_sec + release
+        n = int(total_time * self.sample_rate)
+        t = np.linspace(0, total_time, n, endpoint=False, dtype=np.float32)
+
+        # FM synthesis: Carrier at freq, Modulator at freq (bell index decaying rapidly)
+        mod_index = 2.5 * np.exp(-t * 4.0)
+        modulator = np.sin(2 * np.pi * freq * t) * mod_index
+        carrier = np.sin(2 * np.pi * freq * t + modulator)
+
+        # Subtle chorus detune
+        carrier2 = np.sin(2 * np.pi * (freq * 1.0015) * t) * 0.4
+        tine_bell = np.sin(2 * np.pi * (freq * 7.0) * t) * np.exp(-t * 22.0) * 0.18
+
+        composite = (carrier + carrier2 + tine_bell) * 0.55
+        env = self._adsr_envelope(n, duration_sec, 0.015, 0.25, 0.70, release)
+        return (composite * env * velocity * 0.80).astype(np.float32)
+
+    def _render_organ(self, freq: float, duration_sec: float, velocity: float) -> np.ndarray:
+        """Tonewheel Organ (B3 Drawbars) Model:
+        Additive drawbar harmonics (16', 8', 4', 2') with gentle rotary tremolo.
+        """
+        release = 0.12
+        total_time = duration_sec + release
+        n = int(total_time * self.sample_rate)
+        t = np.linspace(0, total_time, n, endpoint=False, dtype=np.float32)
+
+        # Rotary tremolo at 6.2 Hz
+        tremolo = 1.0 + 0.08 * np.sin(2 * np.pi * 6.2 * t)
+
+        # Drawbars: Sub (16', 0.5x), Fund (8', 1x), 4th (4', 2x), 8th (2', 4x)
+        d1 = np.sin(2 * np.pi * (freq * 0.5) * t) * 0.35
+        d2 = np.sin(2 * np.pi * freq * t) * 0.50
+        d3 = np.sin(2 * np.pi * (freq * 2.0) * t) * 0.30
+        d4 = np.sin(2 * np.pi * (freq * 4.0) * t) * 0.15
+
+        organ_wave = (d1 + d2 + d3 + d4) * tremolo * 0.45
+        env = self._adsr_envelope(n, duration_sec, 0.02, 0.05, 0.90, release)
+        return (organ_wave * env * velocity * 0.85).astype(np.float32)
 
     def _render_percussion(self, pitch: int, duration_sec: float, velocity: float) -> np.ndarray:
         """Procedural drum synthesis: Kick (pitch 36), Snare (pitch 38), Hi-Hat (pitch 42/46), Clap (pitch 39)."""

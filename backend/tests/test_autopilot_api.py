@@ -94,3 +94,19 @@ def test_autopilot_compose_and_workflow():
     assert rev_data["status"] == "success"
     assert rev_data["bpm"] == initial_bpm + 5.0
     assert rev_data["analysis"]["peak_dbfs"] <= -1.9
+
+
+def test_autopilot_interpret_nlp():
+    res = client.post("/api/autopilot/interpret", json={"brief": "a 60 soothing tune with piano and violin in G major"})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "success"
+    b = data["brief"]
+    assert b["key"] == "G"
+    assert b["mode"] == "major"
+    assert b["tempo"] == 70.0
+    assert b["duration_seconds"] == 60.0
+    assert "piano" in b["instruments"]
+    assert "orchestral_strings" in b["instruments"]
+    assert b["genre"] == "ambient"
+

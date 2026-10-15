@@ -27,8 +27,8 @@ describe('AiStudio Component', () => {
 
     const textarea = screen.getByPlaceholderText(/Describe your desired soundtrack/i) as HTMLTextAreaElement;
     expect(textarea.value).toContain('cyberpunk');
-    expect(screen.getByText('128 BPM')).toBeDefined();
-    expect(screen.getByText('45s')).toBeDefined();
+    expect(screen.getAllByText('128 BPM').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('45s').length).toBeGreaterThanOrEqual(1);
   });
 
   it('allows toggling instrument voices', () => {
@@ -95,6 +95,23 @@ describe('AiStudio Component', () => {
       expect(screen.getByText('Master WAV')).toBeDefined();
       expect(screen.getByText('MIDI (SMF 0)')).toBeDefined();
       expect(screen.getByText('Apply Targeted Revision')).toBeDefined();
+    });
+  });
+
+  it('extracts musical parameters from natural language input and updates controls', async () => {
+    render(<AiStudio />);
+
+    const textarea = screen.getByPlaceholderText(/Describe your desired soundtrack/i) as HTMLTextAreaElement;
+    fireEvent.change(textarea, {
+      target: { value: 'a 60 soothing tune in G major with piano and violin' }
+    });
+
+    expect(screen.getByText('NLP EXTRACTED PARAMETERS')).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getAllByText(/G major/i).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/70 BPM/i).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/60s/i).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/Acoustic Grand Piano/i).length).toBeGreaterThanOrEqual(1);
     });
   });
 });

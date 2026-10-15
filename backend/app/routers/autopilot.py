@@ -22,8 +22,22 @@ BASE_OUTPUT_DIR = Path(os.getenv("AUTOPILOT_OUTPUT_DIR", _default_output))
 BASE_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
+class InterpretRequest(BaseModel):
+    brief: Optional[str] = Field(None, description="Natural language composition description to interpret")
+    text: Optional[str] = Field(None, description="Alias for brief")
+
+    @model_validator(mode="after")
+    def resolve_brief(self) -> "InterpretRequest":
+        if not self.brief and self.text:
+            self.brief = self.text
+        elif not self.brief and not self.text:
+            self.brief = "Create a musical piece"
+        return self
+
+
 class ComposeRequest(BaseModel):
     brief: str = Field(..., description="Natural language composition description")
+    use_nlp: Optional[bool] = Field(default=True, description="Whether to prioritize NLP interpretation of the brief")
     genre: Optional[str] = Field(None, description="Optional genre override")
     mood: Optional[str] = Field(None, description="Optional mood override")
     tempo: Optional[float] = Field(None, ge=40, le=240, description="Optional tempo (BPM)")
@@ -179,25 +193,55 @@ async def get_mcp_tools() -> Dict[str, Any]:
     }
 
 
+@router.post("/interpret")
+def interpret_brief(request: InterpretRequest) -> Dict[str, Any]:
+    """Interprets a natural-language composition brief and extracts structured parameters."""
+    interpreter = MusicBriefInterpreter()
+    brief = interpreter.interpret(request.brief)
+    return {
+        "status": "success",
+        "brief": {
+            "description": brief.description,
+            "genre": brief.genre,
+            "subgenre": brief.subgenre,
+            "mood": brief.mood,
+            "energy": brief.energy,
+            "tempo": brief.tempo,
+            "key": brief.key,
+            "mode": brief.mode,
+            "duration_seconds": brief.target_duration,
+            "instruments": brief.desired_instruments,
+            "track_count": brief.track_count,
+            "arrangement_structure": brief.arrangement_structure,
+            "summary": f"{brief.key} {brief.mode.title()} • {int(brief.tempo)} BPM • {int(brief.target_duration)}s • {brief.genre.title()} ({brief.mood}) • Instruments: {', '.join(i.replace('_', ' ').title() for i in brief.desired_instruments)}"
+        }
+    }
+
+
 @router.post("/compose")
 def compose_music(request: ComposeRequest) -> Dict[str, Any]:
     """Executes a real music composition request via the KeyMuse MusicAutopilot engine."""
-    # Build prompt and brief
+    # Build prompt and brief via NLP interpreter
     interpreter = MusicBriefInterpreter()
     brief = interpreter.interpret(request.brief, seed=request.seed)
+
+    # Only apply explicit overrides if user supplied non-defaults or explicitly disabled NLP
     if request.genre:
         brief.genre = request.genre
     if request.mood:
         brief.mood = request.mood
-    if request.tempo:
+    if request.tempo is not None and (not request.use_nlp or request.tempo != 90.0):
         brief.tempo = request.tempo
-    if request.key:
+    if request.key and (not request.use_nlp or request.key != "D"):
         brief.key = request.key
-    if request.mode:
+    if request.mode and (not request.use_nlp or request.mode != "minor"):
         brief.mode = request.mode
-    if request.duration_seconds:
+    if request.duration_seconds is not None and (not request.use_nlp or request.duration_seconds != 60.0):
         brief.target_duration = request.duration_seconds
-    if request.instruments:
+    if request.instruments and not request.use_nlp:
+        brief.desired_instruments = request.instruments
+        brief.track_count = len(request.instruments)
+    elif request.instruments and request.use_nlp and set(request.instruments) != {"atmospheric_pad", "bass_pulse", "percussion", "lead_melody"}:
         brief.desired_instruments = request.instruments
         brief.track_count = len(request.instruments)
     if request.seed is not None:
