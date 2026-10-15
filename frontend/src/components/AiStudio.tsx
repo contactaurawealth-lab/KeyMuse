@@ -198,21 +198,37 @@ export function parseBriefNlp(text: string): ExtractedBrief {
 
   // Negative constraints check
   const bannedInstruments: string[] = [];
-  if (/\b(?:without|no|exclude|omit)\s+(?:drums?|percussion|beats?|grooves?)\b/.test(lower) || /\bno drums\b/.test(lower)) {
-    bannedInstruments.push('percussion');
-  }
-  if (/\b(?:without|no|exclude|omit)\s+(?:bass|basslines?|sub)\b/.test(lower)) {
-    bannedInstruments.push('bass_pulse');
-  }
-  if (/\b(?:without|no|exclude|omit)\s+(?:synths?|pads?)\b/.test(lower) || /\bacoustic only\b/.test(lower)) {
+  let positiveText = lower;
+
+  if (lower.includes('acoustic only')) {
     bannedInstruments.push('atmospheric_pad');
+    positiveText = positiveText.replace(/acoustic only/g, ' ');
   }
 
-  // Text with negative phrases removed for positive instrument matching
-  let positiveText = lower
-    .replace(/\b(?:without|no|exclude|omit)\s+(?:drums?|percussion|beats?|grooves?)\b/g, ' ')
-    .replace(/\b(?:without|no|exclude|omit)\s+(?:bass|basslines?|sub)\b/g, ' ')
-    .replace(/\bno drums\b/g, ' ');
+  const negClausePattern = /\b(?:without|no|exclude|excluding|banned|omit|omitting|free of)\s+([^.]+?)(?=\.|\bwith\b|\bin\b|\bat\b|\bfor\b|\bfeaturing\b|\bjust\b|\bkey\b|\btempo\b|\d+\s*bpm|$)/gi;
+  let match: RegExpExecArray | null;
+  while ((match = negClausePattern.exec(lower)) !== null) {
+    const clause = match[1].toLowerCase();
+    positiveText = positiveText.replace(match[0], ' ');
+    if (/\b(?:drums?|percussion|beats?|grooves?)\b/.test(clause)) {
+      if (!bannedInstruments.includes('percussion')) bannedInstruments.push('percussion');
+    }
+    if (/\b(?:bass|basslines?|sub bass|sub)\b/.test(clause)) {
+      if (!bannedInstruments.includes('bass_pulse')) bannedInstruments.push('bass_pulse');
+    }
+    if (/\b(?:synths?|synthesizers?|pads?)\b/.test(clause)) {
+      if (!bannedInstruments.includes('atmospheric_pad')) bannedInstruments.push('atmospheric_pad');
+    }
+    if (/\b(?:strings?|violins?|cellos?)\b/.test(clause)) {
+      if (!bannedInstruments.includes('orchestral_strings')) bannedInstruments.push('orchestral_strings');
+    }
+    if (/\b(?:pianos?|keys?)\b/.test(clause)) {
+      if (!bannedInstruments.includes('piano')) bannedInstruments.push('piano');
+    }
+    if (/\b(?:guitars?)\b/.test(clause)) {
+      if (!bannedInstruments.includes('guitar')) bannedInstruments.push('guitar');
+    }
+  }
 
   // 1. Duration Extraction
   let duration = 60;

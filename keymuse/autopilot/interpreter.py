@@ -22,27 +22,39 @@ class MusicBriefInterpreter:
         # ---------------------------------------------------------
         explicit_restrictions: List[str] = []
         banned_set = set(actual_constraints.banned_instruments)
-
-        neg_patterns = [
-            (r"\b(?:without|no|exclude|excluding|banned|omit)\s+(?:drums|percussion|beats?|grooves?)\b", "percussion", "no drums or percussion"),
-            (r"\b(?:without|no|exclude|excluding|banned|omit)\s+(?:bass|basslines?|sub bass)\b", "bass_pulse", "no bass"),
-            (r"\b(?:without|no|exclude|excluding|banned|omit)\s+(?:synths?|synthesizers?|pads?)\b", "atmospheric_pad", "no synthesizers or pads"),
-            (r"\b(?:without|no|exclude|excluding|banned|omit)\s+(?:strings?|violins?|cellos?)\b", "orchestral_strings", "no strings"),
-            (r"\b(?:without|no|exclude|excluding|banned|omit)\s+(?:pianos?|keys?)\b", "piano", "no piano"),
-            (r"\b(?:without|no|exclude|excluding|banned|omit)\s+(?:guitars?)\b", "guitar", "no guitar"),
-            (r"\bacoustic only\b", "atmospheric_pad", "acoustic only (no synths)"),
-            (r"\bno drums\b", "percussion", "no drums")
-        ]
-
         text_for_positive_matching = text_lower
-        for pattern, instrument_name, restriction_desc in neg_patterns:
-            if re.search(pattern, text_lower):
-                banned_set.add(instrument_name)
-                explicit_restrictions.append(restriction_desc)
-                # Mask out negative phrasing so it doesn't trigger positive keyword detection
-                text_for_positive_matching = re.sub(pattern, " ", text_for_positive_matching)
 
-        actual_constraints.banned_instruments = list(banned_set)
+        if "acoustic only" in text_lower:
+            banned_set.add("atmospheric_pad")
+            explicit_restrictions.append("acoustic only (no synths)")
+            text_for_positive_matching = text_for_positive_matching.replace("acoustic only", " ")
+
+        neg_clause_pattern = r"\b(?:without|no|exclude|excluding|banned|omit|omitting|free of)\s+([^.]+?)(?=\.|\bwith\b|\bin\b|\bat\b|\bfor\b|\bfeaturing\b|\bjust\b|\bkey\b|\btempo\b|\d+\s*bpm|$)"
+
+        for m in re.finditer(neg_clause_pattern, text_lower):
+            clause = m.group(1).lower()
+            clause_match = m.group(0)
+            text_for_positive_matching = text_for_positive_matching.replace(clause_match, " ")
+            if re.search(r"\b(?:drums?|percussion|beats?|grooves?)\b", clause):
+                banned_set.add("percussion")
+                explicit_restrictions.append("no drums or percussion")
+            if re.search(r"\b(?:bass|basslines?|sub bass|sub)\b", clause):
+                banned_set.add("bass_pulse")
+                explicit_restrictions.append("no bass")
+            if re.search(r"\b(?:synths?|synthesizers?|pads?)\b", clause):
+                banned_set.add("atmospheric_pad")
+                explicit_restrictions.append("no synthesizers or pads")
+            if re.search(r"\b(?:strings?|violins?|cellos?)\b", clause):
+                banned_set.add("orchestral_strings")
+                explicit_restrictions.append("no strings")
+            if re.search(r"\b(?:pianos?|keys?)\b", clause):
+                banned_set.add("piano")
+                explicit_restrictions.append("no piano")
+            if re.search(r"\b(?:guitars?)\b", clause):
+                banned_set.add("guitar")
+                explicit_restrictions.append("no guitar")
+
+        actual_constraints.banned_instruments = sorted(list(banned_set))
 
         # ---------------------------------------------------------
         # 2. Target Duration

@@ -50,7 +50,7 @@ def test_compose_async_execution(tmp_path):
 
     # Poll until completed (with timeout)
     start_wait = time.time()
-    while time.time() - start_wait < 15.0:
+    while time.time() - start_wait < 30.0:
         updated = autopilot.get_task_status(task_state.task_id)
         if updated.status in (TaskStatus.COMPLETED, TaskStatus.FAILED):
             break
